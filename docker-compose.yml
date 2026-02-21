@@ -1,0 +1,45 @@
+services:
+  # ─── Firebase Emulator Suite ───────────────────────────────────────────────
+  emulators:
+    image: node:20-slim
+    working_dir: /app
+    command: >
+      npx -y firebase-tools@latest emulators:start
+      --only firestore,auth,storage
+      --import=/emulator-data
+      --export-on-exit
+    ports:
+      - "4000:4000"   # Emulator UI
+      - "8080:8080"   # Firestore
+      - "9099:9099"   # Auth
+      - "9199:9199"   # Storage
+    volumes:
+      - ./infra/emulator-data:/emulator-data
+      - ./infra/firebase.json:/app/firebase.json
+    environment:
+      - FIREBASE_TOKEN=${FIREBASE_TOKEN:-}
+      - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-spartacus-dev}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ─── Backend FastAPI ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FIRESTORE_EMULATOR_HOST=emulators:8080
+      - FIREBASE_AUTH_EMULATOR_HOST=emulators:9099
+      - FIREBASE_STORAGE_EMULATOR_HOST=emulators:9199
+      - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-spartacus-dev}
+    depends_on:
+      emulators:
+        condition: service_healthy

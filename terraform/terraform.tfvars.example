@@ -1,0 +1,7 @@
+# Copie este arquivo para terraform.tfvars e preencha os valores
+# terraform.tfvars NÃO deve ser commitado (está no .gitignore)
+
+project_id  = "spartacus-artes-marciais"
+github_repo = "Digital-Business-One/spartacus"
+region    = "us-east1"  
+

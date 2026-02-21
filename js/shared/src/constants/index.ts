@@ -1,0 +1,18 @@
+export type PresenceStatus = 'REGISTERED' | 'CONFIRMED' | 'ADJUSTED' | 'ABSENT'
+
+export type UserRole = 'ALUNO' | 'RESPONSAVEL' | 'PROFESSOR' | 'ASSISTENTE' | 'APOIADOR'
+
+export const PRESENCE_STATUS: Record<PresenceStatus, PresenceStatus> = {
+  REGISTERED: 'REGISTERED',
+  CONFIRMED: 'CONFIRMED',
+  ADJUSTED: 'ADJUSTED',
+  ABSENT: 'ABSENT',
+}
+
+export const USER_ROLES: Record<UserRole, UserRole> = {
+  ALUNO: 'ALUNO',
+  RESPONSAVEL: 'RESPONSAVEL',
+  PROFESSOR: 'PROFESSOR',
+  ASSISTENTE: 'ASSISTENTE',
+  APOIADOR: 'APOIADOR',
+}

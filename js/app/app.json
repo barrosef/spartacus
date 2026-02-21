@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Spartacus",
+    "slug": "spartacus",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["android"],
+    "android": {
+      "package": "br.com.spartacus.app"
+    }
+  }
+}
