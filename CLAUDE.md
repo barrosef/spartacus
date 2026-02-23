@@ -11,8 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Workspace JS — todos os comandos pnpm/turbo a partir de js/
-cd js
+# Workspace JS — todos os comandos pnpm/turbo a partir de frontend/
+cd frontend
 
 # Install all JS dependencies
 pnpm install
@@ -41,7 +41,7 @@ cp .env.example .env                             # edite FIREBASE_PROJECT_ID
 docker-compose up                                # sobe emuladores + backend
 
 # Terraform (infra GCP)
-cd terraform
+cd infra/terraform
 cp terraform.tfvars.example terraform.tfvars     # edite project_id e github_repo
 terraform init
 terraform plan
@@ -77,14 +77,14 @@ Pipeline em `.github/workflows/ci-prod.yml`, dispara no push para `main`:
 
 ## Terraform (IaC)
 
-Arquivos em `terraform/`. Provisiona: APIs GCP, Artifact Registry, Cloud Run, Workload Identity Federation, Service Accounts, Firebase Project, Firestore.
+Arquivos em `infra/terraform/`. Provisiona: APIs GCP, Artifact Registry, Cloud Run, Workload Identity Federation, Service Accounts, Firebase Project, Firestore.
 
 **Pré-requisito único (manual, uma vez):**
 ```bash
 gsutil mb -l us-east1 gs://spartacus-artes-marciais-tfstate
 gsutil versioning set on gs://spartacus-artes-marciais-tfstate
 ```
-Bucket já criado: `gs://spartacus-artes-marciais-tfstate` (já configurado em `terraform/main.tf`).
+Bucket já criado: `gs://spartacus-artes-marciais-tfstate` (já configurado em `infra/terraform/main.tf`).
 
 ## Planned Tech Stack
 

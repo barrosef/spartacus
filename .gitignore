@@ -104,11 +104,11 @@ firebase-debug.log
 infra/emulator-data/
 
 # ─── Terraform ────────────────────────────────────────────────────────────────
-terraform/.terraform/
-terraform/terraform.tfvars
-terraform/*.tfplan
-terraform/plan.tf
-terraform/.terraform.lock.hcl
+infra/terraform/.terraform/
+infra/terraform/terraform.tfvars
+infra/terraform/*.tfplan
+infra/terraform/plan.tf
+infra/terraform/.terraform.lock.hcl
 
 # ─── OS ───────────────────────────────────────────────────────────────────────
 .DS_Store

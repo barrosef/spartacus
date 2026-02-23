@@ -1,4 +1,4 @@
-# ADR-03 — Raiz do Workspace JS em `js/`
+# ADR-03 — Raiz do Workspace JS em `frontend/`
 
 **Data:** 2026-02-21
 **Status:** Aceito
@@ -9,21 +9,21 @@
 
 O projeto é um monorepo com três camadas distintas:
 
-- `js/` — pacotes JavaScript/TypeScript (backoffice, app, shared)
+- `frontend/` — pacotes JavaScript/TypeScript (backoffice, app, shared)
 - `backend/` — serviço Python/FastAPI
-- `terraform/` — infraestrutura como código
+- `infra/terraform/` — infraestrutura como código
 - `infra/` — configurações Firebase
 
 O scaffolding inicial colocou os arquivos de workspace JS (`package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.base.json`) na raiz do repositório, seguindo a convenção padrão de monorepos JS.
 
 ## Decisão
 
-A raiz do workspace pnpm/Turbo será a pasta **`js/`**, não a raiz do repositório.
+A raiz do workspace pnpm/Turbo será a pasta **`frontend/`**, não a raiz do repositório.
 
 Os arquivos de coordenação JS ficam em:
 
 ```
-js/
+frontend/
 ├── package.json          ← raiz do workspace pnpm
 ├── pnpm-workspace.yaml   ← declara pacotes: ['*']
 ├── turbo.json            ← pipeline de tarefas
@@ -33,10 +33,10 @@ js/
 └── shared/
 ```
 
-Todos os comandos `pnpm` e `turbo` são executados a partir de `js/`:
+Todos os comandos `pnpm` e `turbo` são executados a partir de `frontend/`:
 
 ```bash
-cd js
+cd frontend
 pnpm install
 pnpm build
 pnpm dev:backoffice
@@ -44,7 +44,7 @@ pnpm dev:backoffice
 
 ## Justificativa
 
-- **Separação clara de responsabilidades:** `js/`, `backend/`, `terraform/` são mundos tecnológicos distintos. Cada um tem sua própria raiz de trabalho (`js/` para pnpm, `backend/` para uv/Python, `terraform/` para Terraform).
+- **Separação clara de responsabilidades:** `frontend/`, `backend/`, `infra/terraform/` são mundos tecnológicos distintos. Cada um tem sua própria raiz de trabalho (`frontend/` para pnpm, `backend/` para uv/Python, `infra/terraform/` para Terraform).
 - **Sem acoplamento forçado:** A raiz do repositório não precisa ser um workspace pnpm só porque há código JS.
 - **Organização explícita:** Novos colaboradores entendem imediatamente onde executar cada tipo de comando.
 
@@ -56,8 +56,8 @@ pnpm dev:backoffice
 
 **Negativas / Mitigações:**
 - Ferramentas que assumem workspace na raiz do repo precisam de configuração explícita:
-  - CI/CD: todos os steps pnpm/turbo usam `working-directory: js`
-  - `cache-dependency-path: js/pnpm-lock.yaml` no `actions/setup-node`
+  - CI/CD: todos os steps pnpm/turbo usam `working-directory: frontend`
+  - `cache-dependency-path: frontend/pnpm-lock.yaml` no `actions/setup-node`
 - O `extends` nos `tsconfig.json` dos pacotes aponta para `../tsconfig.base.json` (um nível, não dois).
 
 ## Alternativas Consideradas

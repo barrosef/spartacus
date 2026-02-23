@@ -15,7 +15,7 @@ services:
       - "9199:9199"   # Storage
     volumes:
       - ./infra/emulator-data:/emulator-data
-      - ./infra/firebase.json:/app/firebase.json
+      - ./infra/gcp/firebase.json:/app/firebase.json
     environment:
       - FIREBASE_TOKEN=${FIREBASE_TOKEN:-}
       - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-spartacus-dev}

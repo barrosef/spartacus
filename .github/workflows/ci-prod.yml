@@ -24,14 +24,14 @@ jobs:
         with:
           node-version: "20"
           cache: "pnpm"
-          cache-dependency-path: js/pnpm-lock.yaml
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install JS dependencies
-        working-directory: js
+        working-directory: frontend
         run: pnpm install --frozen-lockfile
 
       - name: Lint + Typecheck + Build (JS, exceto app mobile)
-        working-directory: js
+        working-directory: frontend
         run: pnpm turbo run lint typecheck build --filter=!app
 
       - uses: actions/setup-python@v5
@@ -117,14 +117,14 @@ jobs:
         with:
           node-version: "20"
           cache: "pnpm"
-          cache-dependency-path: js/pnpm-lock.yaml
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
-        working-directory: js
+        working-directory: frontend
         run: pnpm install --frozen-lockfile
 
       - name: Build backoffice
-        working-directory: js
+        working-directory: frontend
         run: pnpm turbo run build --filter=backoffice
 
       - name: Autenticar no GCP via Workload Identity Federation
@@ -134,7 +134,7 @@ jobs:
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Deploy Firebase Hosting
-        working-directory: infra
+        working-directory: infra/gcp
         run: |
           npx firebase-tools deploy \
             --only hosting \
@@ -157,10 +157,10 @@ jobs:
         with:
           node-version: "20"
           cache: "pnpm"
-          cache-dependency-path: js/pnpm-lock.yaml
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
-        working-directory: js
+        working-directory: frontend
         run: pnpm install --frozen-lockfile
 
       - name: Setup Expo e EAS CLI
@@ -171,5 +171,5 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build Android (EAS)
-        working-directory: js/app
+        working-directory: frontend/app
         run: eas build --platform android --profile production --non-interactive
