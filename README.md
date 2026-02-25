@@ -1,7 +1,3 @@
-Segue um **README estruturado e consolidado** com as decisões tomadas até agora para a Plataforma Digital Spartacus.
-
----
-
 # 🥋 Plataforma Digital Spartacus
 
 Sistema web + aplicativo móvel para gestão e engajamento do projeto social **Spartacus Artes Marciais**, da cidade de Brasnorte-MT.
@@ -9,9 +5,9 @@ Sistema web + aplicativo móvel para gestão e engajamento do projeto social **S
 O objetivo é oferecer:
 
 * Gestão administrativa (backoffice)
-* Rede social interna (timeline + stories)
-* Controle simples de frequência
+* Controle simples de frequência via QR único por aula
 * Registro de doações (1kg alimento/mês)
+* Canal de comunicação oficial entre staff e famílias (Mural de Comunicados, V2)
 * Baixo custo operacional (free tier GCP)
 * Baixo atrito para uso por crianças e responsáveis
 
@@ -21,8 +17,8 @@ O objetivo é oferecer:
 
 1. Digitalizar a gestão do projeto social.
 2. Facilitar controle de turmas, alunos e eventos.
-3. Estimular engajamento via rede social interna.
-4. Controlar frequência de forma **simples e utilizável**.
+3. Controlar frequência de forma **simples e utilizável**.
+4. Registrar doações e acompanhar inadimplência.
 5. Evitar burocracia e gargalos operacionais.
 
 ---
@@ -33,17 +29,17 @@ O objetivo é oferecer:
 
 ### Frontend Web (Backoffice)
 
-* React
-* Hospedado em Google Cloud Storage (static hosting)
+* React + Vite
+* Hospedado em Firebase Hosting
 
 ### Aplicativo Mobile
 
-* React Native
+* React Native (Expo)
 * Android inicialmente (iOS opcional)
 
 ### Backend
 
-* Python (FastAPI recomendado)
+* Python (FastAPI)
 * Google Cloud Run
 
 ### Banco de Dados
@@ -52,12 +48,12 @@ O objetivo é oferecer:
 
 ### Armazenamento de Arquivos
 
-* Firebase Storage / Cloud Storage
+* Firebase Storage
 
 ### Autenticação
 
-* Google Identity (Login Social obrigatório)
-* Validação de e-mail para adultos
+* Firebase Auth (Google Sign-In obrigatório para adultos)
+* Validação de e-mail para adultos; e-mail opcional para menores
 
 ### Infraestrutura
 
@@ -67,34 +63,35 @@ O objetivo é oferecer:
 
 # 👥 Personas
 
-Uma conta pode exercer múltiplas personas.
+Uma conta pode exercer **múltiplas personas simultaneamente** (ex: professor + responsável).
 
 ## Aluno
 
 * Participa de turmas
-* Realiza check-in
-* Posta fotos
-* Visualiza timeline
+* Realiza check-in via QR único da aula
+* Visualiza mural de comunicados (V2)
 
 ## Responsável
 
 * Vinculado a um ou mais alunos menores
-* Realiza check-in em nome do filho
+* **Proxy Access:** pode navegar no app "como o filho" — realiza check-in, visualiza turmas e presença em nome do dependente
 * Gerencia dados do dependente
+* Em modo proxy, todas as ações são registradas com dupla autoria: `userId` (responsável) + `actingAs` (aluno)
+* Ver ADR-04
 
 ## Professor
 
 * Ministra aulas
-* Inicia aula (gera QR)
-* Pode postar conteúdo
+* Inicia aula (gera QR único por aula)
+* Posta conteúdo no Mural (V2)
 * Pode confirmar presenças
 
 ## Assistente
 
-* Gerencia cadastros
+* Gerencia cadastros e aprovações
 * Registra doações
 * Autoriza contas
-* Visualiza relatórios
+* Acessa dashboards operacionais (V2)
 
 ## Apoiador (futuro)
 
@@ -134,7 +131,9 @@ Cada turma contém:
 
 ---
 
-## Calendário
+## Calendário & Agenda
+
+Domínio transversal — exibe eventos de todos os domínios (aulas, eventos gerais). Ver ADR-05.
 
 Visualização:
 
@@ -142,11 +141,8 @@ Visualização:
 * Semana
 * Mês
 
-Permite:
-
-* Arrastar aulas
-* Editar via modal
-* Criar exceções de agenda
+MVP: somente leitura (exibe aulas já agendadas pelas turmas).
+Questão em aberto (ADR-05): Calendário como somente leitura ou fonte de verdade?
 
 ---
 
@@ -155,23 +151,31 @@ Permite:
 * Cadastro de alunos
 * Cadastro de responsáveis
 * Vínculo responsável ↔ aluno
-* Aprovação manual de cadastro
+* Aprovação manual de cadastro pela assistente
 * Ajuste de dados antes da liberação
 
 ---
 
 ## Controle de Doações
 
-Para cada aluno ou responsável:
+Para cada aluno:
 
 * Registro mensal de 1kg alimento
 * Histórico de doações
-* Relatório de inadimplência
+* Alerta de inadimplência
 
-Relatório:
+---
 
-* Lista de alunos em débito
-* Período selecionável
+## Dashboards & Inteligência (V2)
+
+> **Decisão anterior revisada:** "Relatórios" no estilo tradicional (telas com filtros, exportação PDF) foi rejeitado. Substituído por informação contextual integrada às telas operacionais, sem tela de relatório separada.
+
+Exemplos planejados para V2:
+
+* "3 alunos sem doação esse mês" (alerta automático no painel da assistente)
+* Heatmap de frequência por turma
+* Streak de presença no perfil do aluno
+* Ranking de participação
 
 ---
 
@@ -179,10 +183,10 @@ Relatório:
 
 ## Cadastro
 
-* Login social (Google obrigatório)
+* Login social (Google obrigatório para adultos)
 * Validação de e-mail para adultos
 * Cadastro em turma
-* Cadastro de dependentes (sem validação de e-mail)
+* Cadastro de dependentes (e-mail opcional para menores)
 
 Após cadastro:
 
@@ -190,13 +194,18 @@ Após cadastro:
 
 ---
 
-## Timeline
+## Mural & Comunicados (V2)
 
-* Post de imagens
-* Curtidas
-* Compartilhamento externo
-* Stories estilo Instagram
+Canal de comunicação oficial do staff para alunos e responsáveis.
+
+* **Somente staff posta** (professores, secretária, instrutores)
+* Alunos e responsáveis são consumidores de conteúdo
+* Formatos: fotos, textos
 * Stories com expiração automática
+* Curtidas (reação passiva)
+* Compartilhamento externo
+
+> **V2:** no MVP, a comunicação ocorre por canais externos existentes (WhatsApp, etc.). Ver ADR-06.
 
 ---
 
@@ -270,7 +279,7 @@ Evitar:
 * Logs básicos:
 
   * horário
-  * usuário
+  * usuário (`userId` + `actingAs` quando em modo proxy)
   * aula
   * dispositivo
 
@@ -281,13 +290,28 @@ Controle antifraude baseado em:
 
 ---
 
-# 📊 Relatórios
+# 🗂️ MVP vs V2
 
-* Frequência por aluno
-* Frequência por turma
-* Ranking de participação
-* Relatório mensal de presença
-* Relatório de doações
+## Incluído no MVP
+
+| Domínio | Descrição |
+|---|---|
+| 🔐 Auth & Sessão | Firebase Auth + Proxy Access (ADR-04) |
+| 👥 Alunos & Responsáveis | Cadastro, aprovação, vínculos |
+| 🥋 Turmas & Modalidades | Gestão de turmas e modalidades |
+| 📍 Presença | QR único por aula |
+| 🎁 Doações | Registro mensal 1kg por aluno |
+| 📅 Calendário & Agenda | Visualização interna (sem Google Calendar) |
+
+## Excluído do MVP
+
+| Domínio | Status | ADR |
+|---|---|---|
+| 📢 Mural & Comunicados | V2 | ADR-06 |
+| 📊 Dashboards & Inteligência | V2 | — |
+| Integração Google Calendar | V2 | ADR-05 |
+
+Ver ADR-07 para critérios de corte.
 
 ---
 
@@ -303,15 +327,16 @@ aulas
 presencas
 eventos
 doacoes
-posts
-stories
+posts          ← staff only (professores, assistente, instrutores)
+drafts         ← rascunhos de wizard (expiram após conclusão ou abandono)
 ```
 
 ### Exemplo de Presença
 
 ```
 presencas:
-  - userId
+  - userId      ← quem registrou (pode ser o responsável em modo proxy)
+  - actingAs    ← alunoId, presente apenas em registros via proxy access
   - aulaId
   - turmaId
   - timestamp
@@ -325,22 +350,23 @@ presencas:
 1. Secretária inicia aula
 2. Sistema cria `aulaId`
 3. QR gerado
-4. Alunos escaneiam
+4. Alunos escaneiam (ou responsável escaneia em modo proxy)
 5. Presenças registradas
 6. Após aula:
 
    * Revisão opcional
-   * Relatórios atualizados
+   * Dados disponíveis para Dashboards (V2)
 
 ---
 
-# 📈 Evolução Planejada (Futuro)
+# 📈 Evolução Planejada (V2+)
 
-* Geolocalização opcional
-* Check-in automático baseado em histórico
+* Mural de Comunicados (posts, stories, curtidas)
+* Dashboards & Inteligência contextual
+* Integração Google Calendar
 * Notificações push
-* Gamificação
-* Ranking por assiduidade
+* Geolocalização opcional
+* Gamificação e ranking por assiduidade
 * Relatórios para patrocinadores
 
 ---
@@ -358,13 +384,3 @@ presencas:
 # 🥋 Missão
 
 Digitalizar o Spartacus sem burocratizar o Spartacus.
-
----
-
-Se você quiser, no próximo passo posso:
-
-* Transformar isso em versão estruturada para GitHub com badges e roadmap
-* Criar a modelagem detalhada Firestore
-* Gerar o diagrama de arquitetura
-* Ou começar a quebrar isso em backlog técnico (MVP realista)
-

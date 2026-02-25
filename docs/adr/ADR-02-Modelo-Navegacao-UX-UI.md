@@ -1,7 +1,8 @@
 ## ADR-02 — Modelos de Navegação e Wizards
 
-**Status:** Proposto
+**Status:** Aceito
 **Data:** 2026-02-21
+**Atualizado:** 2026-02-24 (questões em aberto fechadas; seção de Proxy Access adicionada)
 **Contexto:** Plataforma Spartacus (app + backoffice)
 **Decisão:** Padronizar navegação com **wizards (step-by-step)** sempre que o fluxo envolver cadastro/edição com múltiplas etapas, validações, dependências ou repetição (loops). Evitar formulários longos “tudo numa tela”.
 
@@ -101,7 +102,8 @@ Precisamos de navegação:
 Escolher: **Aluno | Responsável | Professor | Apoiador | Patrocinador**
 Regras:
 
-* Pode permitir múltiplos perfis no futuro, mas **agora escolha única** (senão vira bomba de complexidade de permissão e telas).
+* **Seleção múltipla permitida** — um usuário pode exercer múltiplos papéis simultaneamente (ex: professor + responsável). O wizard adapta os steps seguintes à combinação de perfis selecionada.
+* Decisão anterior ("agora escolha única") revisada em 2026-02-24: perfis múltiplos são necessários para refletir a realidade operacional do projeto.
 
 #### Step 2 — Dados básicos
 
@@ -131,12 +133,11 @@ Fluxo de loop:
     * Data de nascimento
     * Gênero
     * Telefone: pré-preencher do responsável (editável)
-    * Email: **aqui você propôs reaproveitar e permitir edição** → cuidado: menor geralmente não tem e-mail.
+    * Email: **opcional para menores** — se preenchido, validar unicidade. Login do menor é controlado pelo responsável via Proxy Access (ADR-04).
 
-      * Decisão recomendada: **email do menor opcional**, e se preenchido validar unicidade.
 * “Concluir menores” → segue.
 
-> **Provocação direta (fraqueza do teu fluxo):** se você exigir e-mail por menor, você vai travar cadastro em massa e criar lixo (emails fake). Isso explode suporte, reset de senha e auditoria. Melhor: e-mail do menor opcional e login do menor controlado pelo responsável.
+> **Decisão fechada (2026-02-24):** e-mail do menor é opcional. Exigir e-mail trava cadastro em massa e gera dados inválidos. O login de menor é gerenciado pelo responsável (Proxy Access).
 
 #### Step 5 — Modalidades (varia por perfil)
 
@@ -221,12 +222,12 @@ UI:
 
 ---
 
-### 9) Questões em aberto (não vamos fingir que está fechado)
+### 9) Questões em aberto — **todas fechadas em 2026-02-24**
 
-1. **Email do menor**: opcional ou obrigatório? (minha recomendação: opcional)
-2. **Perfis múltiplos**: um usuário pode ser professor e responsável? (se sim, muda navegação e permissões)
-3. **Documentos**: CPF obrigatório para aluno menor? (legal/operacional)
-4. **Gênero**: manter binário ou expandir? (impacta cadastro + relatórios)
+1. **Email do menor:** ~~opcional ou obrigatório?~~ → **Opcional.** Login do menor é controlado pelo responsável via Proxy Access. E-mail de menor, se preenchido, deve ter unicidade validada.
+2. **Perfis múltiplos:** ~~um usuário pode ser professor e responsável?~~ → **Sim, permitido.** Um usuário pode exercer múltiplos papéis simultaneamente. O Step 1 do wizard passa a suportar seleção múltipla.
+3. **Documentos:** ~~CPF obrigatório para aluno menor?~~ → **CPF obrigatório apenas para adultos.** Menores ficam dispensados.
+4. **Gênero:** ~~manter binário ou expandir?~~ → **Manter binário por ora** (Masculino / Feminino). Expansão futura não descartada, mas não planejada no MVP.
 
 ---
 
@@ -235,5 +236,40 @@ UI:
 * Criar config JSON/YAML do wizard de cadastro (steps + campos + validações).
 * Definir “draft lifecycle” (expiração?).
 * Criar protótipo navegável (Figma ou implementação básica) e validar com 2 perfis: responsável e professor.
+
+---
+
+### 11) Fluxo de Proxy Access no App (adicionado em 2026-02-24)
+
+> Complementa ADR-04. Esta seção descreve como o Proxy Access se manifesta na navegação do app.
+
+#### Entrada no modo proxy
+
+Após login do responsável, a tela inicial oferece:
+
+* **”Acessar como eu mesmo”** → fluxo normal do responsável.
+* **”Navegar como [Nome do Filho]”** → entra em modo proxy para aquele aluno.
+
+Se o responsável tiver múltiplos dependentes, é apresentada uma tela de seleção de filho antes de entrar no modo proxy.
+
+#### Indicador visual permanente
+
+Enquanto em modo proxy, um banner ou chip fixo no topo do app exibe:
+
+```
+[ Navegando como: [Nome do Filho]  ×  Voltar ao meu perfil ]
+```
+
+O indicador é sempre visível durante a sessão proxy — não pode ser dispensado.
+
+#### Saída do modo proxy
+
+* Botão “Voltar ao meu perfil” no banner superior.
+* Opção equivalente no menu principal.
+* Troca direta para outro filho (sem sair do modo proxy, se houver múltiplos dependentes).
+
+#### O que o responsável vê em modo proxy
+
+Tudo que o aluno veria: perfil, turmas, agenda, histórico de presença, doações. O escopo é total — ver ADR-04 para justificativa de segurança.
 
 --

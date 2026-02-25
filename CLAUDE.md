@@ -8,6 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Mission:** Digitalizar o Spartacus sem burocratizar o Spartacus.
 
+## Contrato de Desenvolvimento
+
+Leia **[WORKFLOW.md](./WORKFLOW.md)** antes de iniciar qualquer trabalho. Contém o fluxo de desenvolvimento, gates de aprovação, convenções de commit, estratégia de testes e comandos operacionais entre Humano e Claude.
+
 ## Commands
 
 ```bash
@@ -86,16 +90,16 @@ gsutil versioning set on gs://spartacus-artes-marciais-tfstate
 ```
 Bucket já criado: `gs://spartacus-artes-marciais-tfstate` (já configurado em `infra/terraform/main.tf`).
 
-## Planned Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Backoffice (web) | React, hosted on Google Cloud Storage |
-| Mobile app | React Native (Android first, iOS optional) |
+| Backoffice (web) | React + Vite, hosted on Firebase Hosting |
+| Mobile app | React Native + Expo (Android first, iOS optional) |
 | Backend | Python + FastAPI on Google Cloud Run |
 | Database | Firestore (NoSQL) |
-| File storage | Firebase Storage / Cloud Storage |
-| Auth | Google Identity (OAuth, mandatory) |
+| File storage | Firebase Storage |
+| Auth | Firebase Auth (Google Sign-In) |
 | Infrastructure | GCP Free Tier |
 
 ## Architecture
@@ -115,7 +119,7 @@ Bucket já criado: `gs://spartacus-artes-marciais-tfstate` (já configurado em `
 
 **Registration flow:** New accounts require manual approval by the Assistente before activation. Children (dependents) do not require email validation; adults do.
 
-**Auth:** Google social login is mandatory for all adult users.
+**Auth:** Firebase Auth com Google Sign-In é obrigatório para todos os usuários adultos.
 
 **Design principle:** Simplicity over perfection. Avoid GPS tracking, per-student QR codes, or mandatory manual confirmations — these increase friction without proportional benefit for a social project.
 
