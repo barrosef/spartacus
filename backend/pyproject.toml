@@ -8,8 +8,8 @@ dependencies = [
   "firebase-admin>=6.5",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "pytest>=8.0",
   "httpx>=0.27",
   "ruff>=0.5",

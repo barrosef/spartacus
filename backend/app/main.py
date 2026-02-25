@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import Depends, FastAPI, Header, HTTPException
 from firebase_admin import auth, initialize_app
 
 app = FastAPI(title="Spartacus API", version="0.1.0")

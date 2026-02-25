@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "expo start",
     "build:android": "expo build:android",
-    "lint": "eslint src --ext ts,tsx",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,7 +19,12 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
+    "@eslint/js": "^9.9.0",
     "@types/react": "~18.2.0",
-    "typescript": "^5.5.0"
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.9.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.1"
   }
 }
