@@ -6,6 +6,8 @@ locals {
     "iamcredentials.googleapis.com",
     "firebase.googleapis.com",
     "firebaserules.googleapis.com",
+    "firebasehosting.googleapis.com",
+    "identitytoolkit.googleapis.com",
     "firestore.googleapis.com",
     "storage.googleapis.com",
   ]

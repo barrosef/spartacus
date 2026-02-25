@@ -43,6 +43,21 @@ resource "google_cloud_run_v2_service" "backend" {
   ]
 }
 
+# Override da Org Policy para permitir allUsers neste projeto.
+# A autenticação real é feita pelo Firebase Auth no nível da aplicação FastAPI.
+resource "google_project_organization_policy" "allow_all_iam_members" {
+  project    = var.project_id
+  constraint = "constraints/iam.allowedPolicyMemberDomains"
+
+  list_policy {
+    allow {
+      all = true
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
 # Permite acesso público (auth é feita pelo Firebase no nível da aplicação)
 resource "google_cloud_run_v2_service_iam_member" "public" {
   project  = var.project_id
@@ -50,4 +65,6 @@ resource "google_cloud_run_v2_service_iam_member" "public" {
   name     = google_cloud_run_v2_service.backend.name
   role     = "roles/run.invoker"
   member   = "allUsers"
+
+  depends_on = [google_project_organization_policy.allow_all_iam_members]
 }

@@ -107,6 +107,7 @@ infra/emulator-data/
 infra/terraform/.terraform/
 infra/terraform/terraform.tfvars
 infra/terraform/*.tfplan
+infra/terraform/tfplan
 infra/terraform/plan.tf
 infra/terraform/.terraform.lock.hcl
 

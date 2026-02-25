@@ -22,3 +22,8 @@ output "cloud_run_sa" {
   description = "Email da Service Account do Cloud Run"
   value       = google_service_account.cloud_run.email
 }
+
+output "firebase_hosting_url" {
+  description = "URL padrão do Firebase Hosting (antes do domínio customizado)"
+  value       = "https://${var.project_id}.web.app"
+}
