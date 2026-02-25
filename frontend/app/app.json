@@ -7,8 +7,14 @@
     "platforms": [
       "android"
     ],
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
     "android": {
-      "package": "br.com.spartacus.app"
+      "package": "br.com.spartacus.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
     },
     "extra": {
       "eas": {
