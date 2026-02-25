@@ -7,7 +7,9 @@
     "dev": "expo start",
     "build:android": "expo build:android",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@spartacus/shared": "workspace:*",
