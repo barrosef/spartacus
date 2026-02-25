@@ -6,7 +6,8 @@ on:
 
 env:
   REGION: us-east1
-  IMAGE: ${{ vars.FIREBASE_PROJECT_ID }}/spartacus-backend/api
+  PROJECT_ID: spartacus-artes-marciais
+  IMAGE: spartacus-artes-marciais/spartacus-backend/api
 
 jobs:
   # ─── Testes e verificações ─────────────────────────────────────────────────
@@ -142,12 +143,15 @@ jobs:
         run: |
           npx firebase-tools deploy \
             --only hosting \
-            --project=${{ vars.FIREBASE_PROJECT_ID }} \
+            --project=${{ env.PROJECT_ID }} \
             --non-interactive
 
   # ─── Build mobile (Expo EAS) ───────────────────────────────────────────────
+  # TODO: reabilitar após rodar 'eas credentials' localmente para gerar o
+  # Android Keystore e armazená-lo nos servidores Expo.
   build-mobile:
     name: Build Mobile → Expo EAS
+    if: false  # desabilitado até keystore estar configurado no EAS
     needs: test
     runs-on: ubuntu-latest
     steps:
