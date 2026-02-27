@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Solicitar Exclusão de Dados — Spartacus Plataforma Digital</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary:   #0B0D12;
+      --bg-secondary: #1E1F26;
+      --bg-card:      #16181f;
+      --gold:         #C6A34E;
+      --gold-dim:     #a8883e;
+      --text-primary: #E5E5E5;
+      --text-muted:   #9099a8;
+      --border:       #2a2d38;
+      --danger:       #A4161A;
+      --danger-bg:    #1a0a0b;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: Inter, Roboto, system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    header .logo-mark {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    header .logo-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-header .icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card p, .card li {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .card ul {
+      padding-left: 1.25rem;
+    }
+
+    .card li { margin-bottom: 0.3rem; }
+
+    .warning-card {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+    }
+
+    .warning-card h2 { color: #e05a5a; }
+
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+    }
+
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: flex-start;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      min-width: 2rem;
+      height: 2rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .steps li .step-text {
+      padding-top: 0.2rem;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+    }
+
+    .steps li .step-text strong { color: var(--gold); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--gold);
+      color: #0B0D12;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+      transition: background 0.15s;
+    }
+
+    .btn:hover { background: var(--gold-dim); }
+
+    .info-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: baseline;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    .info-row .label { color: var(--text-muted); min-width: 90px; }
+    .info-row .value { color: var(--text-primary); }
+    .info-row a { color: var(--gold); text-decoration: none; }
+    .info-row a:hover { text-decoration: underline; }
+
+    footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--gold); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 500px) {
+      .page-header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-mark">Spartacus</div>
+    <div class="logo-sub">Plataforma Digital</div>
+  </div>
+</header>
+
+<main>
+  <div class="page-header">
+    <div class="icon">🗑️</div>
+    <h1>Solicitar Exclusão de Dados</h1>
+    <p>Você pode solicitar a exclusão da sua conta e de todos os seus dados pessoais da Plataforma Spartacus a qualquer momento.</p>
+  </div>
+
+  <!-- Como solicitar -->
+  <div class="card">
+    <h2>📧 Como fazer a solicitação</h2>
+    <ul class="steps">
+      <li>
+        <div class="step-text">
+          Envie um e-mail para <strong>ed.barros@digitalbusinessone.com</strong> com o assunto
+          <strong>"Exclusão de Dados — Spartacus"</strong>.
+        </div>
+      </li>
+      <li>
+        <div class="step-text">
+          Informe no corpo do e-mail: seu <strong>nome completo</strong> e o
+          <strong>e-mail cadastrado</strong> na plataforma (ou o nome do aluno, no caso de responsável).
+        </div>
+      </li>
+      <li>
+        <div class="step-text">
+          Responderemos em até <strong>15 dias úteis</strong> confirmando a exclusão ou
+          solicitando informações adicionais para verificar sua identidade.
+        </div>
+      </li>
+    </ul>
+
+    <a class="btn"
+       href="mailto:ed.barros@digitalbusinessone.com?subject=Exclusão%20de%20Dados%20—%20Spartacus&body=Olá,%0A%0ASolicito%20a%20exclusão%20dos%20meus%20dados%20da%20Plataforma%20Spartacus.%0A%0ANome%20completo:%20%0AE-mail%20cadastrado:%20%0A%0AAtenciosamente.">
+      Enviar solicitação por e-mail
+    </a>
+  </div>
+
+  <!-- O que será excluído -->
+  <div class="card">
+    <h2>✅ O que será excluído</h2>
+    <ul>
+      <li>Conta de usuário e credenciais de acesso</li>
+      <li>Nome, data de nascimento e dados de perfil</li>
+      <li>Histórico de presenças vinculado ao seu usuário</li>
+      <li>Vínculos entre responsável e aluno(s)</li>
+      <li>Tokens de sessão e dados de autenticação</li>
+    </ul>
+  </div>
+
+  <!-- O que pode ser retido -->
+  <div class="card warning-card">
+    <h2>⚠️ O que pode ser retido por obrigação legal</h2>
+    <p>Alguns dados podem ser mantidos por até <strong>5 anos</strong> quando exigido por lei, mesmo após a solicitação de exclusão:</p>
+    <ul>
+      <li>Registros de frequência para fins de prestação de contas do projeto social</li>
+      <li>Registros de doação (controle de obrigações do projeto)</li>
+      <li>Logs de segurança anonimizados</li>
+    </ul>
+    <p style="margin-top:0.75rem; font-size:0.85rem; color: var(--text-muted);">
+      Base legal: LGPD, art. 16, incisos I e II.
+    </p>
+  </div>
+
+  <!-- Contato e prazo -->
+  <div class="card">
+    <h2>📋 Informações do responsável</h2>
+    <div class="info-row">
+      <span class="label">Responsável</span>
+      <span class="value">Ed Barros — Projeto Social Spartacus</span>
+    </div>
+    <div class="info-row">
+      <span class="label">E-mail</span>
+      <span class="value"><a href="mailto:ed.barros@digitalbusinessone.com">ed.barros@digitalbusinessone.com</a></span>
+    </div>
+    <div class="info-row">
+      <span class="label">Prazo</span>
+      <span class="value">Até 15 dias úteis</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Base legal</span>
+      <span class="value">LGPD — Lei nº 13.709/2018, art. 18</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>
+    <a href="/privacidade/">Política de Privacidade</a>
+    &nbsp;·&nbsp;
+    © 2026 Projeto Social Spartacus — Brasnorte, MT, Brasil
+  </p>
+</footer>
+
+</body>
+</html>
