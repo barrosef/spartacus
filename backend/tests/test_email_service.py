@@ -1,0 +1,69 @@
+import os
+from unittest.mock import MagicMock, patch
+
+from fastapi.testclient import TestClient
+
+with patch("firebase_admin.initialize_app"):
+    from app.main import app
+
+client = TestClient(app)
+
+
+class TestEmailService:
+    def test_send_chama_sdk(self):
+        with patch("app.services.email_service.Email") as mock_email_cls:
+            mock_instance = MagicMock()
+            mock_email_cls.return_value = mock_instance
+
+            from app.services.email_service import EmailService
+
+            EmailService().send("destino@example.com", "Assunto", "<p>Corpo</p>")
+
+            mock_email_cls.assert_called_once()
+            mock_instance.send.assert_called_once()
+
+    def test_send_usa_api_key_da_env(self):
+        with patch("app.services.email_service.Email") as mock_email_cls:
+            mock_email_cls.return_value = MagicMock()
+            with patch.dict(os.environ, {"MAILERSEND_API_KEY": "mlsn.test-key"}):
+                from app.services.email_service import EmailService
+
+                EmailService().send("destino@example.com", "Assunto", "<p>Corpo</p>")
+
+            mock_email_cls.assert_called_with(api_key="mlsn.test-key")
+
+    def test_send_constroi_email_com_destinatario_correto(self):
+        with patch("app.services.email_service.Email") as mock_email_cls:
+            with patch("app.services.email_service.EmailBuilder") as mock_builder_cls:
+                mock_builder = MagicMock()
+                mock_builder.from_email.return_value = mock_builder
+                mock_builder.to.return_value = mock_builder
+                mock_builder.subject.return_value = mock_builder
+                mock_builder.html.return_value = mock_builder
+                mock_builder_cls.return_value = mock_builder
+                mock_email_cls.return_value = MagicMock()
+
+                from app.services.email_service import EmailService
+
+                EmailService().send("destino@example.com", "Assunto", "<p>Corpo</p>")
+
+                mock_builder.to.assert_called_once_with("destino@example.com")
+                mock_builder.subject.assert_called_once_with("Assunto")
+                mock_builder.html.assert_called_once_with("<p>Corpo</p>")
+
+
+class TestEndpointEmailTest:
+    def test_retorna_403_fora_de_dev(self):
+        env = {k: v for k, v in os.environ.items() if k != "APP_ENV"}
+        with patch.dict(os.environ, env, clear=True):
+            response = client.post("/internal/email/test?to=test@example.com")
+        assert response.status_code == 403
+
+    def test_retorna_200_em_dev_com_email_mockado(self):
+        with patch("app.routers.internal.EmailService") as mock_cls:
+            mock_cls.return_value = MagicMock()
+            with patch.dict(os.environ, {"APP_ENV": "development"}):
+                response = client.post("/internal/email/test?to=test@example.com")
+        assert response.status_code == 200
+        assert response.json() == {"status": "sent", "to": "test@example.com"}
+        mock_cls.return_value.send.assert_called_once()
