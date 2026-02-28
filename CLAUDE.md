@@ -111,7 +111,20 @@ Bucket já criado: `gs://spartacus-artes-marciais-tfstate` (já configurado em `
 
 **Firestore collections:** `users`, `turmas`, `modalidades`, `aulas`, `presencas`, `eventos`, `doacoes`, `posts`, `stories`
 
-**User personas** (a single account can have multiple roles): Aluno (student), Responsável (guardian), Professor (teacher), Assistente (admin/secretary), Apoiador (supporter, future).
+**User personas** (a single account can have multiple roles):
+
+| Portuguese | Code (English) | Description |
+|---|---|---|
+| Controlador | `owner` | Project founder / legal responsible — highest access |
+| Assistente | `assistant` | Administrative secretary — approves accounts, manages operations |
+| Professor | `teacher` | Full class management access |
+| Instrutor | `instructor` | Like teacher but reduced access scope |
+| Responsável | `guardian` | Guardian of underage students |
+| Aluno | `student` | Active student |
+| Apoiador | `supporter` | Community supporter |
+| Patrocinador | `sponsor` | Project sponsor |
+
+Role codes are used in code, tokens (Firebase Custom Claims), and database. A single user account can hold multiple roles simultaneously.
 
 ## Key Design Decisions
 
