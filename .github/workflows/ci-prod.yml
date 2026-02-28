@@ -3,6 +3,10 @@ name: CI/CD — Produção
 on:
   push:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/**"
 
 env:
   REGION: us-east1

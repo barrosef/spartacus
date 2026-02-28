@@ -12,7 +12,7 @@ Claude opera com **autonomia de execução** e **aprovação em pontos-chave**. 
 
 | Gate | Quem aprova | O que é aprovado |
 |------|-------------|------------------|
-| G1 — User Story | Humano | Escopo, critérios de aceite, frentes impactadas |
+| G1 — User Story | Humano | Escopo, critérios de aceite, módulos impactados |
 | G2 — Plano de Desenvolvimento | Humano | Abordagem técnica, arquivos impactados, estratégia de testes |
 | G3 — PR para develop | Humano | Código final, testes passando, funcionalidade validada |
 | G4 — Release (develop → main) | Humano | Tag de versão, merge para main |
@@ -40,7 +40,7 @@ Claude propõe User Story:
   - Título
   - Descrição
   - Critérios de aceite (checklists testáveis)
-  - Frentes impactadas: [backend] [web] [mobile]
+  - Módulos impactados: [backend] [backoffice] [app]  ← obrigatório
   - Estimativa de complexidade: [baixa | média | alta]
         ↓
 Humano aprova / ajusta → ✅ G1
@@ -48,7 +48,17 @@ Humano aprova / ajusta → ✅ G1
 Claude cria card no ClickUp via API
 ```
 
-**Regra:** Toda user story DEVE ter critérios de aceite claros e testáveis. Sem critérios, sem aprovação.
+**Regra:** Toda user story DEVE ter critérios de aceite claros e testáveis e ao menos um módulo impactado declarado. Sem critérios ou sem módulo, sem aprovação.
+
+**Módulos válidos:**
+
+| Módulo | Descrição |
+|--------|-----------|
+| `backend` | API FastAPI (Cloud Run) |
+| `backoffice` | Web admin em React (Firebase Hosting) |
+| `app` | Aplicativo mobile em React Native + Expo |
+
+> Exemplos: Login social → `[backoffice, app]` · Postagem de conteúdo → `[app]` · Endpoint de presença → `[backend]`
 
 ### Fase 2 — Planejamento (requer G2)
 
@@ -80,8 +90,10 @@ Claude faz commit(s) semânticos e push
 ```
 feat(backend): adiciona endpoint de cadastro de usuário
 test(backend): testes unitários para cadastro de usuário
-feat(web): formulário de cadastro
-test(web): testes do formulário de cadastro
+feat(backoffice): formulário de cadastro
+test(backoffice): testes do formulário de cadastro
+feat(app): tela de login social
+test(app): testes do fluxo de login
 ```
 
 ### Fase 4 — Teste e Ajuste (colaborativa)
@@ -110,7 +122,7 @@ Humano testa manualmente
 ```
 Claude abre PR: feature/CU-<card_id> → develop
   - Título: [CU-<card_id>] <título do card>
-  - Descrição: resumo das mudanças, frentes impactadas, como testar
+  - Descrição: resumo das mudanças, módulos impactados, como testar
   - CI/CD roda automaticamente
         ↓
 CI/CD passa?
@@ -139,14 +151,14 @@ Humano aprova → ✅ G4 → Claude executa
 
 ## 3. Estratégia de Testes
 
-| Frente | Unitários | Integração | Ferramenta |
+| Módulo | Unitários | Integração | Ferramenta |
 |--------|-----------|------------|------------|
 | Backend (FastAPI) | Endpoints, services, models | API com TestClient | pytest + httpx |
-| Web (React) | Componentes, hooks, utils | Fluxos de usuário | Jest + RTL |
-| Mobile (React Native) | Componentes, hooks, utils | Fluxos de usuário | Jest + RNTL |
+| Backoffice (React) | Componentes, hooks, utils | Fluxos de usuário | Jest + RTL |
+| App (React Native) | Componentes, hooks, utils | Fluxos de usuário | Jest + RNTL |
 
 **Regras:**
-- Testes apenas nas frentes que o card toca
+- Testes apenas nos módulos que o card toca
 - Todo endpoint novo: teste unitário + integração
 - Todo componente com lógica: teste unitário
 - Testes cross-stack apenas quando o card exige interação entre frentes
