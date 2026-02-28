@@ -1,6 +1,4 @@
-import os
-
-from mailersend import Email, EmailBuilder
+from mailersend import EmailBuilder, MailerSendClient
 
 
 class EmailService:
@@ -8,7 +6,6 @@ class EmailService:
     _FROM_NAME = "Spartacus"
 
     def send(self, to: str, subject: str, html: str) -> None:
-        api_key = os.getenv("MAILERSEND_API_KEY", "")
         email_request = (
             EmailBuilder()
             .from_email(self._FROM_EMAIL, self._FROM_NAME)
@@ -17,4 +14,4 @@ class EmailService:
             .html(html)
             .build()
         )
-        Email(api_key=api_key).send(email_request)
+        MailerSendClient().emails.send(email_request)
