@@ -43,16 +43,25 @@ Adotar **GitFlow com nomes de branches encurtados**, **Conventional Commits** (c
 ### Nomenclatura
 
 ```
-feat/CU-{card_id}-{slug}      feat/CU-86afu4k03-email-service
-bug/CU-{card_id}-{slug}       bug/CU-91x3k2p01-presenca-duplicada
-fix/CU-{card_id}-{slug}       fix/CU-88z1m4r02-auth-token-expirado
-rel/{version}                  rel/1.2.0
-chore/{slug}                   chore/update-deps
+feat/{cardId}-{resumo-titulo}      feat/86afu4k03-email-notification-service
+bug/{cardId}-{resumo-titulo}       bug/91x3k2p01-presenca-duplicada
+fix/{cardId}-{resumo-titulo}       fix/88z1m4r02-auth-token-expirado
+rel/{version}                       rel/1.2.0
+chore/{resumo-titulo}               chore/update-deps
 ```
 
-- `{slug}`: kebab-case, máximo 5 palavras, em inglês
-- `{card_id}`: ID do card ClickUp — rastreabilidade obrigatória em `feat/` e `bug/`
-- `rel/` não tem card — agrupa múltiplos cards já mergeados em `dev`
+**Regras:**
+- `{cardId}`: ID do card no ClickUp — obrigatório em `feat/`, `bug/` e `fix/`
+- `{resumo-titulo}`: resumo em kebab-case do título do card, **até 50 caracteres** (incluindo o `{cardId}-`)
+- O resumo deve ser derivado do título do card, não inventado livremente
+- Idioma do resumo: inglês
+- `rel/` e `chore/` não têm card — sem `{cardId}`
+
+**Exemplo completo:**
+```
+card: "Infraestrutura de envio de e-mails transacionais via MailerSend"
+branch: feat/86afu4k03-email-notification-service
+```
 
 ---
 

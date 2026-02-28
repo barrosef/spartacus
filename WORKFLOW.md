@@ -75,7 +75,7 @@ Humano aprova / ajusta → ✅ G2
 ### Fase 3 — Implementação (autônoma)
 
 ```
-Claude cria branch: feat/CU-<card_id>-<descricao-breve>
+Claude cria branch: feat/<card_id>-<resumo-titulo-até-50-chars>
         ↓
 Claude implementa código
         ↓
@@ -120,7 +120,7 @@ Humano testa manualmente
 ### Fase 5 — Pull Request (requer G3)
 
 ```
-Claude abre PR: feat/CU-<card_id> → dev
+Claude abre PR: feat/<card_id>-<resumo-titulo> → dev
   - Título: [CU-<card_id>] <título do card>
   - Descrição: resumo das mudanças, módulos impactados, como testar
   - CI/CD roda automaticamente
