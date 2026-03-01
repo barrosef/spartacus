@@ -7,6 +7,12 @@ on:
       - "frontend/**"
       - "backend/**"
       - ".github/workflows/**"
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/**"
 
 env:
   REGION: us-east1
@@ -64,6 +70,7 @@ jobs:
   deploy-backend:
     name: Deploy Backend → Cloud Run
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -111,6 +118,7 @@ jobs:
   deploy-backoffice:
     name: Deploy Backoffice → Firebase Hosting
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -153,6 +161,7 @@ jobs:
   build-mobile:
     name: Build Mobile → Expo EAS
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
