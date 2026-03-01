@@ -1,4 +1,4 @@
-# CONTRACT.md — Contrato de Desenvolvimento Humano & Claude
+# WORKFLOW.md — Contrato de Desenvolvimento Humano & Claude
 
 **Última atualização:** 24 de fevereiro de 2026
 
@@ -14,8 +14,8 @@ Claude opera com **autonomia de execução** e **aprovação em pontos-chave**. 
 |------|-------------|------------------|
 | G1 — User Story | Humano | Escopo, critérios de aceite, módulos impactados |
 | G2 — Plano de Desenvolvimento | Humano | Abordagem técnica, arquivos impactados, estratégia de testes |
-| G3 — PR para develop | Humano | Código final, testes passando, funcionalidade validada |
-| G4 — Release (develop → main) | Humano | Tag de versão, merge para main |
+| G3 — PR para dev | Humano | Código final, testes passando, funcionalidade validada |
+| G4 — Release (dev → main) | Humano | Tag de versão, merge para main |
 
 ### Decisões que Claude toma sem aprovação
 
@@ -75,7 +75,7 @@ Humano aprova / ajusta → ✅ G2
 ### Fase 3 — Implementação (autônoma)
 
 ```
-Claude cria branch: feat/<card_id>-<resumo-titulo-até-50-chars>
+Claude cria branch a partir de dev: feat/<card_id>-<resumo-titulo-até-50-chars>
         ↓
 Claude implementa código
         ↓
@@ -130,7 +130,7 @@ CI/CD passa?
   └─ Não → Claude corrige, commita, push
         ↓
 Humano revisa PR:
-  ┌─ Aprovado → ✅ G3 → Merge para develop
+  ┌─ Aprovado → ✅ G3 → Merge para dev
   └─ Mudanças solicitadas → Claude ajusta, commita, push
 ```
 
@@ -140,7 +140,7 @@ Humano revisa PR:
 Humano decide agrupar cards para release
         ↓
 Claude prepara:
-  - Merge develop → main
+  - Merge dev → main
   - Tag semver: v<major>.<minor>.<patch>
   - Changelog com cards incluídos
         ↓
