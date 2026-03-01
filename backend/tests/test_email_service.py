@@ -42,18 +42,28 @@ class TestEmailService:
                 mock_builder.html.assert_called_once_with("<p>Corpo</p>")
 
 
+_VALID_CLAIMS = {"uid": "user-123", "email": "test@test.com", "roles": ["owner"]}
+_AUTH_HEADER = {"Authorization": "Bearer test-token"}
+
+
 class TestEndpointEmailTest:
     def test_retorna_403_fora_de_dev(self):
         env = {k: v for k, v in os.environ.items() if k != "APP_ENV"}
-        with patch.dict(os.environ, env, clear=True):
-            response = client.post("/internal/email/test?to=test@example.com")
+        with patch("app.security.middleware.verify_id_token", return_value=_VALID_CLAIMS):
+            with patch.dict(os.environ, env, clear=True):
+                response = client.post(
+                    "/internal/email/test?to=test@example.com", headers=_AUTH_HEADER
+                )
         assert response.status_code == 403
 
     def test_retorna_200_em_dev_com_email_mockado(self):
-        with patch("app.routers.internal.EmailService") as mock_cls:
-            mock_cls.return_value = MagicMock()
-            with patch.dict(os.environ, {"APP_ENV": "development"}):
-                response = client.post("/internal/email/test?to=test@example.com")
+        with patch("app.security.middleware.verify_id_token", return_value=_VALID_CLAIMS):
+            with patch("app.routers.internal.EmailService") as mock_cls:
+                mock_cls.return_value = MagicMock()
+                with patch.dict(os.environ, {"APP_ENV": "development"}):
+                    response = client.post(
+                        "/internal/email/test?to=test@example.com", headers=_AUTH_HEADER
+                    )
         assert response.status_code == 200
         assert response.json() == {"status": "sent", "to": "test@example.com"}
         mock_cls.return_value.send.assert_called_once()
