@@ -41,7 +41,7 @@ uv run pytest                                    # run tests
 uv run ruff check app/                           # lint
 
 # Dev local completo (Firebase Emulators + backend)
-cp .env.example .env                             # edite FIREBASE_PROJECT_ID
+cp .env.example .env                             # edite FIREBASE_PROJECT_ID e ROOT_PROJECT_ID
 docker-compose up                                # sobe emuladores + backend
 
 # Terraform (infra GCP)
@@ -62,7 +62,9 @@ Dados do emulador persistem em `infra/emulator-data/` (ignorado pelo git).
 
 ## CI/CD (GitHub Actions)
 
-Pipeline em `.github/workflows/ci-prod.yml`, dispara no push para `main`:
+Pipeline em `.github/workflows/ci-prod.yml`:
+- Job `test` dispara em **push para `main`** e em **PRs para `dev` ou `main`**
+- Jobs de deploy disparam apenas em **push para `main`** (não em PRs)
 
 | Job | O que faz |
 |---|---|
@@ -109,9 +111,24 @@ Bucket já criado: `gs://spartacus-artes-marciais-tfstate` (já configurado em `
 - `app/` — React Native mobile app
 - `backend/` — Python FastAPI service
 
-**Firestore collections:** `users`, `turmas`, `modalidades`, `aulas`, `presencas`, `eventos`, `doacoes`, `posts`, `stories`
+**Multi-tenancy:** A plataforma suporta múltiplos projetos. Cada projeto é um tenant isolado por campo `projectId` nas coleções de domínio. Ver ADR-13.
 
-**User personas** (a single account can have multiple roles):
+**Firestore collections:**
+
+*Globais (sem `projectId`):*
+- `users` — conta de pessoa física; identidade única na plataforma
+- `projects` — metadados do projeto/tenant (nome, tipo PF/PJ, missão, valores, endereço, logo)
+
+*Escopadas por projeto (todas contêm `projectId`):*
+- `memberships` — vínculo `userId ↔ projectId ↔ roles[]` + status
+- `organizations` — PJs vinculadas ao projeto (patrocinadores/apoiadores) — dados only, sem acesso
+- `turmas`, `modalidades`, `aulas`, `presencas`, `eventos`, `doacoes`, `posts`, `stories`
+
+**Projeto ROOT:** O projeto Spartacus de Brasnorte é o projeto ROOT da plataforma. Identificado via env var `ROOT_PROJECT_ID`. Apenas `owner` ou `assistant` do ROOT podem criar novos projetos.
+
+**Contexto de projeto no backend:** toda requisição autenticada deve incluir o header `X-Project-Id: {projectId}`.
+
+**User personas** — roles são **por projeto** (um usuário pode ter roles diferentes em projetos distintos):
 
 | Portuguese | Code (English) | Description |
 |---|---|---|
@@ -121,10 +138,13 @@ Bucket já criado: `gs://spartacus-artes-marciais-tfstate` (já configurado em `
 | Instrutor | `instructor` | Like teacher but reduced access scope |
 | Responsável | `guardian` | Guardian of underage students |
 | Aluno | `student` | Active student |
-| Apoiador | `supporter` | Community supporter |
-| Patrocinador | `sponsor` | Project sponsor |
+| Apoiador | `supporter` | Community supporter (PF) |
+| Patrocinador | `sponsor` | Project sponsor (PF ou PJ via `organizations`) |
 
-Role codes are used in code, tokens (Firebase Custom Claims), and database. A single user account can hold multiple roles simultaneously.
+Role codes are used in code and Firebase Custom Claims. Custom Claims structure:
+```json
+{ "projects": { "spartacus": ["teacher"], "outro-projeto": ["student"] } }
+```
 
 ## Key Design Decisions
 
@@ -134,13 +154,26 @@ Role codes are used in code, tokens (Firebase Custom Claims), and database. A si
 
 **Auth:** Firebase Auth com Google Sign-In é obrigatório para todos os usuários adultos.
 
+**Multi-tenancy:** Isolamento por `projectId` em todas as coleções de domínio. Contexto de projeto via header `X-Project-Id`. Projeto ROOT identificado por `ROOT_PROJECT_ID` (env var). Ver ADR-13.
+
 **Design principle:** Simplicity over perfection. Avoid GPS tracking, per-student QR codes, or mandatory manual confirmations — these increase friction without proportional benefit for a social project.
 
 ## Data Model Reference
 
 ```
-presencas: { userId, aulaId, turmaId, timestamp, status }
-aulas: linked to turma + date/time, generates QR
-turmas: { nome, modalidade, agenda, professorId }
-users: multi-persona, includes approval status
+# Globais
+users:       { name, email, birth_date, approval_status, created_at }
+projects:    { name, type, document, mission, principles, values, address, logo_url }
+
+# Por projeto (todas têm projectId)
+memberships: { projectId, userId, roles[], status, joined_at }
+organizations: { projectId, name, type, cnpj, logo_url, contact, role }
+turmas:      { projectId, nome, modalidade, agenda, professorId }
+aulas:       { projectId, turmaId, date_time, qr_code, qr_expires_at }
+presencas:   { projectId, userId, aulaId, turmaId, timestamp, status }
+modalidades: { projectId, nome, descricao }
+eventos:     { projectId, ... }
+doacoes:     { projectId, ... }
+posts:       { projectId, ... }
+stories:     { projectId, ... }
 ```
