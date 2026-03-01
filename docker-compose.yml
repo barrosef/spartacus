@@ -43,6 +43,7 @@ services:
       - FIREBASE_AUTH_EMULATOR_HOST=emulators:9099
       - FIREBASE_STORAGE_EMULATOR_HOST=emulators:9199
       - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-demo-spartacus}
+      - ROOT_PROJECT_ID=${ROOT_PROJECT_ID:-demo-spartacus}
     depends_on:
       emulators:
         condition: service_healthy
