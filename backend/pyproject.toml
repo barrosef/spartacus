@@ -6,6 +6,7 @@ dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",
   "firebase-admin>=6.5",
+  "structlog>=24.0",
 ]
 
 [dependency-groups]

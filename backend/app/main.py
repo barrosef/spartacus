@@ -1,7 +1,13 @@
 from fastapi import Depends, FastAPI, Header, HTTPException
 from firebase_admin import auth, initialize_app
 
+from app.logging.config import configure_logging
+from app.logging.middleware import LoggingMiddleware
+
+configure_logging()
+
 app = FastAPI(title="Spartacus API", version="0.1.0")
+app.add_middleware(LoggingMiddleware)
 
 # Firebase Admin SDK — usa Application Default Credentials no Cloud Run.
 # Em dev local, usa FIREBASE_AUTH_EMULATOR_HOST se definido.
