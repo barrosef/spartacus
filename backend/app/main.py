@@ -3,7 +3,7 @@ from firebase_admin import initialize_app
 
 from app.logging.config import configure_logging
 from app.logging.middleware import LoggingMiddleware
-from app.routers import internal
+from app.routers import internal, projects
 from app.security.context import auth_ctx
 from app.security.decorator import public, register_public_routes
 from app.security.middleware import AuthMiddleware
@@ -18,6 +18,7 @@ app.add_middleware(LoggingMiddleware)
 app.add_middleware(AuthMiddleware)
 
 app.include_router(internal.router)
+app.include_router(projects.router)
 
 # Firebase Admin SDK — uses Application Default Credentials on Cloud Run.
 # In local dev, uses FIREBASE_AUTH_EMULATOR_HOST if set.
