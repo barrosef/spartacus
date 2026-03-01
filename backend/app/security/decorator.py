@@ -78,7 +78,9 @@ def require_root(func):
         ctx = auth_ctx.get()
         root_project_id = os.getenv("ROOT_PROJECT_ID", "")
         if ctx is None or ctx.project_id != root_project_id:
-            raise HTTPException(status_code=403, detail="Operação restrita ao projeto ROOT")
+            raise HTTPException(
+                status_code=403, detail="Operação restrita ao projeto ROOT"
+            )
         return await func(*args, **kwargs)
 
     @functools.wraps(func)
@@ -86,7 +88,9 @@ def require_root(func):
         ctx = auth_ctx.get()
         root_project_id = os.getenv("ROOT_PROJECT_ID", "")
         if ctx is None or ctx.project_id != root_project_id:
-            raise HTTPException(status_code=403, detail="Operação restrita ao projeto ROOT")
+            raise HTTPException(
+                status_code=403, detail="Operação restrita ao projeto ROOT"
+            )
         return func(*args, **kwargs)
 
     if asyncio.iscoroutinefunction(func):
