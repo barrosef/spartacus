@@ -7,6 +7,7 @@ dependencies = [
   "uvicorn[standard]>=0.30",
   "firebase-admin>=6.5",
   "mailersend>=1.0",
+  "structlog>=24.0",
 ]
 
 [dependency-groups]

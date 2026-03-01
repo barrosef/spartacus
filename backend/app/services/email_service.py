@@ -1,10 +1,13 @@
 from mailersend import EmailBuilder, MailerSendClient
 
+from app.logging.decorator import log
+
 
 class EmailService:
     _FROM_EMAIL = "noreply@horadofluxo.com.br"
     _FROM_NAME = "Spartacus"
 
+    @log(mask=["to"])
     def send(self, to: str, subject: str, html: str) -> None:
         email_request = (
             EmailBuilder()
