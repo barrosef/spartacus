@@ -42,8 +42,9 @@ class TestEmailService:
                 mock_builder.html.assert_called_once_with("<p>Corpo</p>")
 
 
-_VALID_CLAIMS = {"uid": "user-123", "email": "test@test.com", "roles": ["owner"]}
-_AUTH_HEADER = {"Authorization": "Bearer test-token"}
+_PROJECT_ID = "test-project"
+_VALID_CLAIMS = {"uid": "user-123", "email": "test@test.com", "projects": {_PROJECT_ID: ["owner"]}}
+_AUTH_HEADER = {"Authorization": "Bearer test-token", "X-Project-Id": _PROJECT_ID}
 
 
 class TestEndpointEmailTest:

@@ -8,6 +8,7 @@ ADMIN_ROLES: frozenset[str] = frozenset({"owner", "assistant"})
 class AuthContext:
     user_id: str
     user_email: str
+    project_id: str
     roles: list[str] = field(default_factory=list)
 
 

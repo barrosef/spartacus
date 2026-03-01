@@ -29,10 +29,19 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 status_code=401, content={"detail": "Token inválido ou expirado"}
             )
 
+        project_id = request.headers.get("X-Project-Id", "")
+        if not project_id:
+            return JSONResponse(
+                status_code=400, content={"detail": "Header X-Project-Id ausente"}
+            )
+
+        roles = claims.get("projects", {}).get(project_id, [])
+
         ctx = AuthContext(
             user_id=claims["uid"],
             user_email=claims.get("email", ""),
-            roles=claims.get("roles", []),
+            project_id=project_id,
+            roles=roles,
         )
         auth_ctx.set(ctx)
 
