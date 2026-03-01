@@ -30,6 +30,12 @@ resource "google_cloud_run_v2_service" "backend" {
         cpu_idle = true
       }
 
+      liveness_probe {
+        http_get {
+          path = "/health"
+        }
+      }
+
       env {
         name  = "GOOGLE_CLOUD_PROJECT"
         value = var.project_id
