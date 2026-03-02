@@ -118,30 +118,37 @@ Tela de Entrada
   [Criar Conta]
        │
        ▼
-┌─────────────────────────────────────────────────────────────┐
-│  WIZARD DE CRIAÇÃO DE CONTA                                 │
-│                                                             │
-│  Etapa 0 ──► Etapa 1 ──► Etapa 2 ──► Etapa 3 ──► Etapa 4  │
-│  Autenticação   Dados       Contato    Endereço   Perfil(s) │
-│                 Pessoais                                     │
-│                                                             │
-│  Etapa 4 ──► (condicional) ──────────────────────────────► │
-│             │                                               │
-│     ┌───────┴──────────────────────────────────┐           │
-│     │                                          │           │
-│  Perfil contém                          Perfil NÃO contém  │
-│  student/teacher/instructor/guardian    class roles         │
-│     │                                          │           │
-│     ▼                                          │           │
-│  Etapa 5                                       │           │
-│  Turmas/Dependentes ◄──────────────────────────┘           │
-│     │                                                       │
-│     ▼                                                       │
-│  Etapa 6 — Revisão e Confirmação                            │
-│     │                                                       │
-│     ▼                                                       │
-│  Submissão ──► Tela de Conta Pendente                       │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│  WIZARD DE CRIAÇÃO DE CONTA                                         │
+│                                                                     │
+│  Etapa 0 ──► Etapa 1 ──► Etapa 2 ──► Etapa 3 ──► Etapa 4           │
+│  Autenticação   Dados       Contato    Endereço   Perfil(s)         │
+│                 Pessoais                                             │
+│                                                                     │
+│  Etapa 4 ──► (roteamento condicional por perfil)                    │
+│                                                                     │
+│  ─── supporter / sponsor ───────────────────────────────► Etapa 6  │
+│                                                                     │
+│  ─── student / teacher / instructor (sem guardian) ──────► [Turmas │
+│                                                              Próprias│
+│                                                             ] ─────► Etapa 6
+│                                                                     │
+│  ─── guardian (com ou sem class roles) ─────────────────►          │
+│                                                                     │
+│       ┌─── LOOP DE DEPENDENTES ──────────────────────────┐         │
+│       │                                                   │         │
+│       │  [Dados Dep.N] ──► [Turmas Dep.N]                │         │
+│       │       ▲                   │                       │         │
+│       │       └─── + outro dep. ──┘                       │         │
+│       │                           │ concluir deps.        │         │
+│       └───────────────────────────┘                       │         │
+│                        │                                   │         │
+│                        ▼                                   │         │
+│               se tem class role ──► [Turmas Próprias] ──► Etapa 6  │
+│               senão ──────────────────────────────────► Etapa 6    │
+│                                                                     │
+│  Etapa 6 — Revisão e Confirmação ──► Submissão ──► Conta Pendente  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 4.2 Máquina de estados do wizard
@@ -150,33 +157,47 @@ Tela de Entrada
 IDLE
  │ [usuário clica "Criar Conta"]
  ▼
-STEP_0_AUTH          ← Etapa 0: Google ou Email/Senha
+STEP_0_AUTH               ← Etapa 0: Google ou Email/Senha
  │ [auth OK]
  ▼
-STEP_1_DADOS         ← Etapa 1: Dados pessoais
+STEP_1_DADOS              ← Etapa 1: Dados pessoais
  │ [continuar]
  ▼
-STEP_2_CONTATO       ← Etapa 2: Contato
+STEP_2_CONTATO            ← Etapa 2: Contato
  │ [continuar]
  ▼
-STEP_3_ENDERECO      ← Etapa 3: Endereço
+STEP_3_ENDERECO           ← Etapa 3: Endereço
  │ [continuar]
  ▼
-STEP_4_PERFIL        ← Etapa 4: Perfil(s) multi-select
+STEP_4_PERFIL             ← Etapa 4: Perfil(s) multi-select
  │ [continuar]
- ├─ se roles ⊇ {student|teacher|instructor|guardian} ──► STEP_5_TURMAS
- └─ senão ────────────────────────────────────────────► STEP_6_REVISAO
+ ├─ se roles ∩ {supporter,sponsor} apenas ────────────────► STEP_6_REVISAO
+ ├─ se guardian ∈ roles ──────────────────────────────────► STEP_5_DEP_DADOS (dep. 1)
+ └─ se {student|teacher|instructor} ∈ roles (sem guardian)► STEP_5_TURMAS_PROPRIAS
  ▼
-STEP_5_TURMAS        ← Etapa 5: Turmas / Dependentes (condicional)
+                           ┌── LOOP DE DEPENDENTES ──────────────────────────────┐
+STEP_5_DEP_DADOS          ← Dados do dependente N (nome, DOB, gênero, CPF...)   │
+ │ [continuar → turmas]                                                           │
+ ▼                                                                                │
+STEP_5_DEP_TURMAS         ← Turmas para o dependente N (tela exclusiva)         │
+ │ [confirmar turmas]                                                             │
+ ▼                                                                                │
+STEP_5_DEP_LISTA          ← Lista de dependentes cadastrados                    │
+ │ [+ adicionar outro] ──────────────────────────────────────────────────────────┘
  │ [continuar]
+ ├─ se {student|teacher|instructor} ∈ roles ──────────────► STEP_5_TURMAS_PROPRIAS
+ └─ senão ────────────────────────────────────────────────► STEP_6_REVISAO
  ▼
-STEP_6_REVISAO       ← Etapa 6: Revisão e confirmação
+STEP_5_TURMAS_PROPRIAS    ← Turmas próprias (tela exclusiva; mesmo componente)
+ │ [confirmar]
+ ▼
+STEP_6_REVISAO            ← Etapa 6: Revisão e confirmação
  │ [confirmar]
  ▼
 SUBMITTING
  │ [sucesso]
  ▼
-PENDING              ← Tela de conta pendente
+PENDING                   ← Tela de conta pendente
 ```
 
 ### 4.3 Componentes obrigatórios em todas as etapas (ADR-02)
@@ -492,13 +513,16 @@ PENDING              ← Tela de conta pendente
 
 **Roteamento pós-Etapa 4:**
 
-| Perfis selecionados | Próxima etapa |
+| Perfis selecionados | Sequência na Etapa 5 |
 |---|---|
-| `student` (com ou sem outros) | Etapa 5A — Seleção de turmas próprias |
-| `teacher` ou `instructor` (com ou sem outros) | Etapa 5A — Seleção de turmas a lecionar |
-| `guardian` sem `student/teacher/instructor` | Etapa 5B — Registro de dependentes |
-| `guardian` + (`student` ou `teacher` ou `instructor`) | Etapa 5A → Etapa 5B em sequência |
-| apenas `supporter` / `sponsor` | Etapa 6 — Revisão (pula Etapa 5) |
+| apenas `supporter` / `sponsor` | *(pula Etapa 5)* → Etapa 6 |
+| `student` (sem guardian) | → [Turmas próprias] → Etapa 6 |
+| `teacher` ou `instructor` (sem guardian) | → [Turmas a lecionar] → Etapa 6 |
+| `guardian` apenas (sem class roles) | → [Loop deps.] → Etapa 6 |
+| `guardian` + `student` | → [Loop deps.] → [Turmas próprias] → Etapa 6 |
+| `guardian` + `teacher`/`instructor` | → [Loop deps.] → [Turmas a lecionar] → Etapa 6 |
+
+> **Regra de ordem invariante:** quando `guardian` está nos perfis, os dependentes são cadastrados **sempre antes** das turmas do próprio usuário. Você pensa nos filhos primeiro.
 
 ---
 
@@ -506,29 +530,91 @@ PENDING              ← Tela de conta pendente
 
 > **Por que isso importa:** em vez de o admin atribuir turmas manualmente após aprovar cada conta, o usuário declara upfront em quais turmas quer entrar. A aprovação da conta e a matrícula se tornam uma única ação administrativa. Reduz o ciclo de onboarding de dias para uma única revisão.
 
-### 10.1 Etapa 5A — Seleção de Turmas (para Aluno, Professor, Instrutor)
+### 10.1 Princípio de Design da Etapa 5
+
+Duas regras não negociáveis:
+
+1. **A seleção de turmas é sempre uma tela exclusiva e dedicada** — nunca combinada com formulários de dados pessoais ou de dependente. O usuário foca em uma coisa de cada vez.
+
+2. **Dependentes sempre antes de si próprio** — quando o responsável também é aluno/professor/instrutor, ele termina de cadastrar todos os filhos antes de escolher as próprias turmas. Isso é intuitivo: você pensa nos filhos primeiro.
+
+O mesmo componente `<SelecaoTurmasScreen>` é reutilizado em todos os contextos, adaptando apenas o cabeçalho e o texto para deixar absolutamente claro **para quem** as turmas estão sendo selecionadas.
+
+### 10.2 Componente Reutilizável `<SelecaoTurmasScreen>`
+
+Este é o componente central da Etapa 5. Toda seleção de turma — seja para um dependente ou para si próprio — passa por ele.
+
+```
+Props:
+  contextType:       "self" | "dependent"
+  personName:        string      // nome do sujeito da seleção
+  personAge:         number      // para filtragem por faixa etária
+  roleLabel:         "aluno" | "professor" | "instrutor"
+  initialSelection:  string[]    // seleção prévia (para edição)
+  onConfirm:         (turmaIds: string[]) => void
+```
+
+#### Layout — contexto "dependent" (ex.: Maria Silva, 10 anos)
 
 ```
 ┌────────────────────────────────────────┐
-│  ← Voltar      Etapa 6 de 7      Sair  │
-│  ████████████████████████░  86%        │
+│  ← Voltar    Dep. 1 · Turmas     Sair  │
+│  ████████████████████░░░░░░░  75%      │
 ├────────────────────────────────────────┤
 │                                        │
-│  Em quais turmas você quer entrar?     │  ← label para "Aluno"
-│  — OU —                                │
-│  Quais turmas você vai lecionar?       │  ← label para "Professor/Instrutor"
+│  ╔══════════════════════════════════╗  │
+│  ║  👧  Maria Silva · 10 anos       ║  │  ← chip de contexto (cor destaque)
+│  ║  Escolhendo turmas para Maria    ║  │
+│  ╚══════════════════════════════════╝  │
 │                                        │
-│  Selecione uma ou mais turmas.         │
+│  Em quais turmas Maria vai entrar?     │
 │                                        │
 │  ──── JIU JITSU ───────────────────    │
-│                                        │
 │  ┌──────────────────────────────────┐  │
 │  │ ☑  Jiu Jitsu Infantil            │  │
 │  │     Seg · Qua · Sex              │  │
 │  │     18:00–19:00                  │  │
 │  │     👤 Prof. Istanrley           │  │
-│  │     👥 8 / 20 vagas              │  │  ← vagas disponíveis (opcional MVP)
 │  └──────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │ ☐  Jiu Jitsu Adulto  [fora faixa]│  │  ← turma fora da faixa etária: visível
+│  │     (recomendado +18 anos)   🔒  │  │    mas desabilitada + ícone explicativo
+│  └──────────────────────────────────┘  │
+│                                        │
+│  ──── CAPOEIRA ─────────────────────   │
+│  ┌──────────────────────────────────┐  │
+│  │ ☐  Capoeira                      │  │
+│  │     Ter · Qui · 17:00–18:30      │  │
+│  │     👤 Mestre Paulo              │  │
+│  └──────────────────────────────────┘  │
+│                                        │
+│  ── [... mais turmas ...] ──────────   │
+│                                        │
+│  ⓘ Turmas filtradas para 10 anos      │  ← badge informativo
+│                                        │
+│  1 turma selecionada para Maria        │  ← contador com nome do sujeito
+│                                        │
+│  [ Confirmar turmas de Maria ]         │  ← botão com nome do sujeito
+│                                        │
+└────────────────────────────────────────┘
+```
+
+#### Layout — contexto "self" / aluno (ex.: José da Silva, 32 anos)
+
+```
+┌────────────────────────────────────────┐
+│  ← Voltar      Suas Turmas       Sair  │
+│  ████████████████████████████░  93%    │
+├────────────────────────────────────────┤
+│                                        │
+│  ╔══════════════════════════════════╗  │
+│  ║  👤  José da Silva · 32 anos     ║  │  ← chip de contexto (cor diferente do dep.)
+│  ║  Escolhendo suas turmas          ║  │
+│  ╚══════════════════════════════════╝  │
+│                                        │
+│  Em quais turmas você quer entrar?     │
+│                                        │
+│  ──── JIU JITSU ───────────────────    │
 │  ┌──────────────────────────────────┐  │
 │  │ ☐  Jiu Jitsu Adulto              │  │
 │  │     Seg · Qua · Sex              │  │
@@ -536,79 +622,64 @@ PENDING              ← Tela de conta pendente
 │  │     👤 Prof. Istanrley           │  │
 │  └──────────────────────────────────┘  │
 │                                        │
-│  ──── CAPOEIRA ─────────────────────   │
-│                                        │
-│  ┌──────────────────────────────────┐  │
-│  │ ☐  Capoeira                      │  │
-│  │     Ter · Qui                    │  │
-│  │     17:00–18:30                  │  │
-│  │     👤 Mestre Paulo              │  │
-│  └──────────────────────────────────┘  │
-│                                        │
 │  ──── MUAY THAI ────────────────────   │
-│  [... mais turmas ...]                 │
-│                                        │
-│  1 turma selecionada                   │
-│                                        │
-│  [ Continuar ]                         │
-│                                        │
-└────────────────────────────────────────┘
-```
-
-**Regras de filtragem por faixa etária:**
-- Calcular a idade do usuário a partir da `birth_date` (Etapa 1)
-- Se `idade < 12`: mostrar apenas turmas com `faixa_etaria = "infantil"` (+ aviso)
-- Se `12 ≤ idade < 18`: mostrar turmas infantil e infanto-juvenil (+ aviso)
-- Se `idade ≥ 18`: mostrar todas as turmas
-- Exibir badge de aviso discreto: *"Turmas filtradas para sua faixa etária (X anos)"*
-
-**Mínimo de seleção:** ao menos 1 turma. O "Continuar" fica desabilitado se nenhuma selecionada.
-
-Se nenhuma turma existir no sistema → mensagem de empty state: *"Nenhuma turma disponível no momento. Você pode concluir o cadastro e aguardar a abertura de turmas."* + botão "Continuar" habilitado sem seleção.
-
-**Se o usuário tem `guardian` além de `student/teacher/instructor`:**
-Após Etapa 5A, avança para **Etapa 5B**.
-
-### 10.2 Etapa 5B — Registro de Dependentes (para Responsável)
-
-> O responsável pode cadastrar 1 ou mais dependentes. Cada dependente:
-> 1. Tem seu próprio sub-formulário (nome, data nascimento, gênero)
-> 2. Tem sua própria seleção de turmas (imediatamente após os dados)
-> 3. Não precisa de e-mail nem de conta Firebase (ADR-04)
-> 4. Herda endereço e contato do responsável (editável por dependente)
-
-#### 10.2.1 Loop de dependentes
-
-```
-┌────────────────────────────────────────┐
-│  ← Voltar      Etapa 6 de 7      Sair  │
-│  ████████████████████████░  86%        │
-├────────────────────────────────────────┤
-│                                        │
-│  Dependentes cadastrados               │
-│                                        │
 │  ┌──────────────────────────────────┐  │
-│  │ ✓ Maria Silva, 10 anos           │  │
-│  │   Jiu Jitsu Infantil             │  │
-│  │   [Editar] [Remover]             │  │
+│  │ ☐  Muay Thai                     │  │
+│  │     Ter · Qui · Sab              │  │
+│  │     19:00–20:30                  │  │
+│  │     👤 Prof. Carlos              │  │
 │  └──────────────────────────────────┘  │
 │                                        │
-│  [ + Adicionar dependente ]            │
+│  0 turmas selecionadas                 │
 │                                        │
-│  Todos os dependentes cadastrados?     │
-│                                        │
-│  [ Continuar para revisão ]            │
+│  [ Confirmar minhas turmas ]           │
 │                                        │
 └────────────────────────────────────────┘
 ```
 
-O botão "Continuar para revisão" fica habilitado desde que haja ao menos 1 dependente cadastrado com ao menos 1 turma selecionada (ou se nenhuma turma existir no sistema).
+#### Layout — contexto "self" / professor ou instrutor
 
-#### 10.2.2 Formulário de dependente
+Idêntico ao anterior, com:
+- Chip: `👤 José da Silva · Professor`
+- Título: *"Em quais turmas você vai lecionar?"*
+- Botão: `[ Confirmar turmas que vou lecionar ]`
+
+**Diferencial de cor do chip de contexto:**
+- Dependente → fundo âmbar `#F59E0B` (alerta suave — "estou agindo por outra pessoa")
+- Próprio → fundo primário `#C6A34E` (identidade — "estou agindo por mim")
+
+### 10.3 Regras Comuns da Seleção de Turmas
+
+**Filtragem por faixa etária:**
+
+| Idade do sujeito | Turmas exibidas |
+|---|---|
+| < 12 anos | Apenas `infantil` |
+| 12–17 anos | `infantil` + `infanto_juvenil` |
+| ≥ 18 anos | Todas |
+
+- Turmas fora da faixa: **exibidas mas desabilitadas** (com ícone 🔒 e tooltip explicativo) — nunca escondidas, para que o usuário entenda a existência delas.
+- Badge informativo no rodapé da lista: *"Turmas filtradas para N anos"*
+
+**Mínimo de seleção:** ao menos 1 turma habilitada para seleção. Botão desabilitado se 0 selecionadas.
+
+**Empty state** (nenhuma turma cadastrada no sistema):
+```
+[ícone de turma vazia]
+Nenhuma turma disponível no momento.
+Conclua o cadastro e aguarde — a equipe
+irá indicar as turmas após a aprovação.
+[ Continuar sem selecionar turma ]
+```
+
+### 10.4 Loop de Dependentes
+
+#### 10.4.1 Formulário de dados do dependente
 
 ```
 ┌────────────────────────────────────────┐
-│  ← Cancelar   Dependente 1/N          │
+│  ← Voltar    Dep. 1 · Dados      Sair  │  ← rótulo contextual (não número absoluto)
+│  ████████████████████░░░░░░░  71%      │
 ├────────────────────────────────────────┤
 │                                        │
 │  Dados do(a) dependente                │
@@ -633,31 +704,79 @@ O botão "Continuar para revisão" fica habilitado desde que haja ao menos 1 dep
 │                                        │
 │  Telefone de contato                   │
 │  ┌──────────────────────────────────┐  │
-│  │ (65) 99999-9999    [do responsável]│  │  ← pré-preenchido, editável
+│  │ (65) 99999-9999  [do responsável]│  │  ← pré-preenchido, editável
 │  └──────────────────────────────────┘  │
 │                                        │
 │  E-mail (opcional)                     │
 │  ┌──────────────────────────────────┐  │
 │  │                                  │  │
 │  └──────────────────────────────────┘  │
-│  ℹ O login do(a) dependente é feito   │
-│    pelo responsável.                   │
+│  ℹ O login de [nome] é feito por você. │
 │                                        │
-│  [ Continuar → Escolher Turmas ]       │
+│  [ Continuar → Escolher turmas ]       │  ← sempre avança para turmas deste dep.
 │                                        │
 └────────────────────────────────────────┘
 ```
 
-#### 10.2.3 Seleção de turmas do dependente
+> O botão **sempre avança para a tela de turmas deste dependente** — nunca pula para o próximo dependente. A etapa de turmas é obrigatória no fluxo de cada dependente.
 
-Exatamente igual ao Etapa 5A, mas:
-- **Contexto:** "Turmas para Maria Silva"
-- **Filtragem por idade:** aplicada à `birth_date` DO DEPENDENTE
-- Ao confirmar → retorna à lista de dependentes (10.2.1), permitindo adicionar mais
+O texto do botão usa o nome assim que o usuário digita: *"Continuar → Turmas de Maria"* (atualização em tempo real após o campo nome perder o foco).
 
-**Validação de idade do dependente:**
-- Se `idade_dependente >= 18` → exibir aviso: *"Este dependente tem 18 anos ou mais. Considere criar uma conta independente para ele(a)."*
-- Não bloquear, apenas informar.
+#### 10.4.2 Após confirmar turmas do dependente — Lista de Dependentes
+
+```
+┌────────────────────────────────────────┐
+│  ← Voltar     Dependentes        Sair  │
+│  ████████████████████░░░░░░░  78%      │
+├────────────────────────────────────────┤
+│                                        │
+│  Dependentes cadastrados               │
+│                                        │
+│  ┌──────────────────────────────────┐  │
+│  │ 👧 Maria Silva · 10 anos    ✓    │  │
+│  │    Jiu Jitsu Infantil            │  │
+│  │    Seg · Qua · Sex · 18:00–19:00 │  │
+│  │                                  │  │
+│  │  [ Editar dados ]  [ Editar turmas ]│  ← dois botões distintos e explícitos
+│  └──────────────────────────────────┘  │
+│                                        │
+│  ┌──────────────────────────────────┐  │
+│  │ 👦 Pedro Silva · 7 anos     ✓    │  │
+│  │    Capoeira                      │  │
+│  │    Ter · Qui · 17:00–18:30       │  │
+│  │                                  │  │
+│  │  [ Editar dados ]  [ Editar turmas ]│
+│  └──────────────────────────────────┘  │
+│                                        │
+│  [ + Adicionar outro dependente ]      │
+│                                        │
+│  ─────────────────────────────────     │
+│                                        │
+│  [ Continuar ]                         │  ← → Turmas próprias (se class role)
+│                                        │     → Etapa 6 (se só guardian)
+└────────────────────────────────────────┘
+```
+
+**"Editar dados"** → retorna ao formulário de dados daquele dependente, preservando tudo.
+**"Editar turmas"** → abre `<SelecaoTurmasScreen>` para aquele dependente com seleção atual pré-carregada.
+
+**Validação de idade ao cadastrar dependente:**
+- Se `idade_dependente ≥ 18`: aviso informativo (não bloqueia): *"[Nome] tem 18 anos ou mais. Considere criar uma conta independente para ele(a)."*
+
+### 10.5 Indicador de Progresso com Sub-etapas Dinâmicas
+
+O contador "Etapa X de Y" no header fixo é substituído por **rótulos de contexto** dentro da Etapa 5, para evitar confusão com um total variável (que muda conforme o número de dependentes).
+
+| Posição no fluxo | Header |
+|---|---|
+| Etapas 0–4 (fixas) | `Etapa X de 6` |
+| Dados do dependente N | `Dep. N · Dados` |
+| Turmas do dependente N | `Dep. N · Turmas` |
+| Lista de dependentes | `Dependentes` |
+| Turmas próprias | `Suas Turmas` |
+| Etapa 6 | `Etapa 6 de 6 — Revisão` |
+
+A barra de progresso avança suavemente no intervalo reservado à Etapa 5 (70%–93%), sem saltos abruptos ao adicionar dependentes.
 
 ---
 
@@ -1135,19 +1254,34 @@ O campo `professorId` é `None` no seed — os professores serão associados ap�
 - [ ] Botão "Continuar" desabilitado com 0 perfis selecionados
 - [ ] Aviso sobre aprovação aparece ao selecionar Professor ou Instrutor
 
-### Etapa 5A — Turmas Próprias
-- [ ] Turmas são agrupadas por modalidade
-- [ ] Filtragem por faixa etária é aplicada automaticamente e exibe badge informativo
-- [ ] Cada turma mostra nome, horários e professor
-- [ ] "Continuar" desabilitado se nenhuma turma selecionada (e turmas existem)
-- [ ] Empty state correto se nenhuma turma cadastrada
+### Etapa 5 — Componente `<SelecaoTurmasScreen>` (reutilizável)
+- [ ] O mesmo componente é usado para dependentes e para o próprio usuário
+- [ ] O chip de contexto exibe nome e idade do sujeito correto em todas as ocorrências
+- [ ] A cor do chip diferencia dependente (âmbar) de próprio (dourado primário)
+- [ ] O título da tela adapta: "Em quais turmas [Nome] vai entrar?" vs "Em quais turmas você quer entrar?"
+- [ ] O texto do botão de confirmação usa o nome: "Confirmar turmas de Maria" vs "Confirmar minhas turmas"
+- [ ] O contador de seleção exibe o nome: "2 turmas selecionadas para Maria"
+- [ ] Turmas fora da faixa etária são exibidas como desabilitadas (com ícone e tooltip), não escondidas
+- [ ] Badge informativo aparece quando filtragem por faixa etária está ativa
+- [ ] Botão desabilitado se 0 turmas selecionadas (quando turmas existem no sistema)
+- [ ] Empty state correto se nenhuma turma cadastrada no sistema
 
-### Etapa 5B — Dependentes
+### Etapa 5 — Loop de Dependentes
 - [ ] É possível adicionar N dependentes
-- [ ] Cada dependente tem sua seleção de turma independente
-- [ ] Telefone e endereço pré-preenchidos do responsável
-- [ ] E-mail do dependente é opcional e NÃO bloqueia o fluxo se ausente
-- [ ] Ao editar dependente já adicionado: dados preservados corretamente
+- [ ] Após os dados de cada dependente, o fluxo avança **obrigatoriamente** para a tela de turmas desse dependente (nunca pula)
+- [ ] O texto do botão "Continuar → Turmas de [Nome]" atualiza em tempo real ao digitar o nome
+- [ ] Turmas do dependente são filtradas pela `birth_date` DO DEPENDENTE (não do responsável)
+- [ ] Aviso informativo (não bloqueante) quando dependente tem ≥ 18 anos
+- [ ] Telefone do responsável pré-preenchido no formulário do dependente (editável)
+- [ ] E-mail do dependente é opcional e NÃO bloqueia o fluxo
+- [ ] Na lista de dependentes: "Editar dados" e "Editar turmas" são botões distintos
+- [ ] "Editar turmas" abre `<SelecaoTurmasScreen>` com seleção anterior pré-carregada
+
+### Etapa 5 — Ordenação e Roteamento
+- [ ] Para `guardian + student`: dependentes são cadastrados ANTES das turmas próprias
+- [ ] Para `guardian` sem class roles: após lista de dependentes vai direto para Etapa 6 (sem turmas próprias)
+- [ ] Para `student` sem guardian: tela de turmas próprias aparece após Etapa 4, sem loop de dependentes
+- [ ] Para `supporter`/`sponsor`: Etapa 5 é completamente pulada
 
 ### Etapa 6 — Revisão
 - [ ] Todos os dados inseridos aparecem na revisão
@@ -1202,20 +1336,22 @@ App (React Native):
   ├── screens/auth/
   │   ├── LoginScreen.tsx
   │   └── SignupWizard/
-  │       ├── WizardNavigator.tsx    (state machine + step routing)
+  │       ├── WizardNavigator.tsx        (state machine + step routing)
   │       ├── Step0Auth.tsx
   │       ├── Step1DadosPessoais.tsx
   │       ├── Step2Contato.tsx
   │       ├── Step3Endereco.tsx
   │       ├── Step4Perfil.tsx
-  │       ├── Step5ATurmas.tsx
-  │       ├── Step5BDependentes.tsx
-  │       │   ├── DependenteForm.tsx
-  │       │   └── DependenteTurmas.tsx
+  │       ├── Step5DepDados.tsx          (formulário de dados do dependente)
+  │       ├── Step5DepLista.tsx          (lista de dependentes cadastrados)
   │       ├── Step6Revisao.tsx
   │       └── TelaPendente.tsx
+  ├── components/wizard/
+  │   └── SelecaoTurmasScreen.tsx        (⚠ componente REUTILIZÁVEL — usado em
+  │                                        Step5DepTurmas E Step5TurmasProprias;
+  │                                        NÃO duplicar a lógica de listagem/filtro)
   └── hooks/
-      ├── useWizardDraft.ts          (AsyncStorage + API sync)
+      ├── useWizardDraft.ts              (AsyncStorage + API sync)
       └── useFirebaseAuth.ts
 
 Shared:
