@@ -38,7 +38,36 @@ os.environ.setdefault("FIREBASE_STORAGE_EMULATOR_HOST", _STORAGE_HOST)
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", _EMULATOR_PROJECT)
 os.environ.setdefault("ROOT_PROJECT_ID", _ROOT_PROJECT_ID)
 
-# Import APÓS definir env vars para que initialize_app() use os emuladores
+# ── Credencial fake para os emuladores ────────────────────────────────────────
+# O Firebase Admin SDK busca ADC ao criar clientes Firestore/Storage. Os
+# emuladores não validam tokens, então uma credencial fake é suficiente.
+# Inicializamos ANTES de importar app.main (que chama initialize_app()).
+# app.main trata o ValueError "already initialized" com try/except.
+
+import firebase_admin  # noqa: E402
+import google.oauth2.credentials  # noqa: E402
+from firebase_admin import credentials as fb_creds  # noqa: E402
+
+
+class _EmulatorCredential(fb_creds.Base):
+    """Credencial fake para Firebase Emulator — dispensa ADC real."""
+
+    def get_credential(self) -> google.oauth2.credentials.Credentials:
+        return google.oauth2.credentials.Credentials(token="fake-emulator-token")
+
+
+try:
+    firebase_admin.get_app()
+except ValueError:
+    firebase_admin.initialize_app(
+        credential=_EmulatorCredential(),
+        options={
+            "projectId": _EMULATOR_PROJECT,
+            "storageBucket": f"{_EMULATOR_PROJECT}.appspot.com",
+        },
+    )
+
+# Import APÓS inicializar firebase_admin com credencial fake
 from app.main import app  # noqa: E402
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

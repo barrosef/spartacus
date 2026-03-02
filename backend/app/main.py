@@ -22,7 +22,11 @@ app.include_router(projects.router)
 
 # Firebase Admin SDK — uses Application Default Credentials on Cloud Run.
 # In local dev, uses FIREBASE_AUTH_EMULATOR_HOST if set.
-initialize_app()
+# ValueError is raised when the app is already initialized (e.g. integration tests).
+try:
+    initialize_app()
+except ValueError:
+    pass
 
 
 @public
