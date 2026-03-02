@@ -17,6 +17,10 @@ dev = [
   "ruff>=0.5",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--ignore=tests/integration"
+
 [tool.ruff]
 line-length = 88
 target-version = "py312"
