@@ -1,30 +1,47 @@
-from fastapi import Depends, FastAPI, Header, HTTPException
-from firebase_admin import auth, initialize_app
+from fastapi import FastAPI
+from firebase_admin import initialize_app
+
+from app.logging.config import configure_logging
+from app.logging.middleware import LoggingMiddleware
+from app.routers import internal, members, projects
+from app.security.context import auth_ctx
+from app.security.decorator import public, register_public_routes
+from app.security.middleware import AuthMiddleware
+
+configure_logging()
 
 app = FastAPI(title="Spartacus API", version="0.1.0")
 
-# Firebase Admin SDK — usa Application Default Credentials no Cloud Run.
-# Em dev local, usa FIREBASE_AUTH_EMULATOR_HOST se definido.
-initialize_app()
+# Starlette applies middlewares in reverse add order.
+# AuthMiddleware executes first: sets auth_ctx and propagates user_id to request_ctx.
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(AuthMiddleware)
+
+app.include_router(internal.router)
+app.include_router(projects.router)
+app.include_router(members.router)
+
+# Firebase Admin SDK — uses Application Default Credentials on Cloud Run.
+# In local dev, uses FIREBASE_AUTH_EMULATOR_HOST if set.
+# ValueError is raised when the app is already initialized (e.g. integration tests).
+try:
+    initialize_app()
+except ValueError:
+    pass
 
 
-async def get_current_user(authorization: str = Header(...)) -> dict:
-    """Verifica o Firebase ID Token enviado no header Authorization: Bearer <token>."""
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token inválido")
-    id_token = authorization.removeprefix("Bearer ")
-    try:
-        return auth.verify_id_token(id_token)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
-
-
+@public
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
 
 @app.get("/me")
-def me(user: dict = Depends(get_current_user)):
-    """Exemplo de endpoint autenticado — retorna dados do usuário logado."""
-    return {"uid": user["uid"], "email": user.get("email")}
+def me():
+    """Returns the authenticated user's data."""
+    ctx = auth_ctx.get()
+    return {"uid": ctx.user_id, "email": ctx.user_email, "roles": ctx.roles}
+
+
+# Resolve @public paths after all routes are registered.
+register_public_routes(app.routes)

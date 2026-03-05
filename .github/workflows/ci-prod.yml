@@ -7,6 +7,12 @@ on:
       - "frontend/**"
       - "backend/**"
       - ".github/workflows/**"
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/**"
 
 env:
   REGION: us-east1
@@ -60,10 +66,34 @@ jobs:
         working-directory: backend
         run: uv run pytest
 
+  # ─── Testes de integração (Firebase Emulators) ─────────────────────────────
+  test-integration:
+    name: Integration Tests (Firebase Emulators)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install Python dependencies
+        working-directory: backend
+        run: uv sync
+
+      - name: Run integration tests (emuladores gerenciados pelo pytest)
+        working-directory: backend
+        run: uv run pytest tests/integration/ -v
+
   # ─── Deploy do backend (Cloud Run) ─────────────────────────────────────────
   deploy-backend:
     name: Deploy Backend → Cloud Run
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -111,6 +141,7 @@ jobs:
   deploy-backoffice:
     name: Deploy Backoffice → Firebase Hosting
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -153,6 +184,7 @@ jobs:
   build-mobile:
     name: Build Mobile → Expo EAS
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

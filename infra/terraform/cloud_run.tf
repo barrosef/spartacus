@@ -30,9 +30,25 @@ resource "google_cloud_run_v2_service" "backend" {
         cpu_idle = true
       }
 
+      liveness_probe {
+        http_get {
+          path = "/health"
+        }
+      }
+
       env {
         name  = "GOOGLE_CLOUD_PROJECT"
         value = var.project_id
+      }
+
+      env {
+        name = "MAILERSEND_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.mailersend_api_key.secret_id
+            version = "latest"
+          }
+        }
       }
     }
   }
@@ -40,6 +56,7 @@ resource "google_cloud_run_v2_service" "backend" {
   depends_on = [
     google_project_service.apis,
     google_artifact_registry_repository.backend,
+    google_secret_manager_secret.mailersend_api_key,
   ]
 }
 

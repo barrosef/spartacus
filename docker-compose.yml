@@ -1,13 +1,17 @@
 services:
   # ─── Firebase Emulator Suite ───────────────────────────────────────────────
   emulators:
-    image: node:20-slim
+    build:
+      context: ./infra/emulators
+      dockerfile: Dockerfile
     working_dir: /app
     command: >
+      bash -c "echo '{\"emulators\":{\"auth\":{\"port\":9099,\"host\":\"0.0.0.0\"},\"firestore\":{\"port\":8080,\"host\":\"0.0.0.0\"},\"storage\":{\"port\":9199,\"host\":\"0.0.0.0\"},\"ui\":{\"enabled\":true,\"host\":\"0.0.0.0\",\"port\":4000}}}' > /app/firebase.json &&
       npx -y firebase-tools@latest emulators:start
+      --project demo-spartacus
       --only firestore,auth,storage
       --import=/emulator-data
-      --export-on-exit
+      --export-on-exit"
     ports:
       - "4000:4000"   # Emulator UI
       - "8080:8080"   # Firestore
@@ -15,16 +19,15 @@ services:
       - "9199:9199"   # Storage
     volumes:
       - ./infra/emulator-data:/emulator-data
-      - ./infra/gcp/firebase.json:/app/firebase.json
     environment:
       - FIREBASE_TOKEN=${FIREBASE_TOKEN:-}
-      - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-spartacus-dev}
+      - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-demo-spartacus}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 60s
 
   # ─── Backend FastAPI ───────────────────────────────────────────────────────
   backend:
@@ -39,7 +42,8 @@ services:
       - FIRESTORE_EMULATOR_HOST=emulators:8080
       - FIREBASE_AUTH_EMULATOR_HOST=emulators:9099
       - FIREBASE_STORAGE_EMULATOR_HOST=emulators:9199
-      - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-spartacus-dev}
+      - GOOGLE_CLOUD_PROJECT=${FIREBASE_PROJECT_ID:-demo-spartacus}
+      - ROOT_PROJECT_ID=${ROOT_PROJECT_ID:-demo-spartacus}
     depends_on:
       emulators:
         condition: service_healthy

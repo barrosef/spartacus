@@ -18,7 +18,7 @@ def test_health():
 
 def test_me_sem_token_retorna_401():
     response = client.get("/me")
-    assert response.status_code == 422  # Header obrigatório ausente → Unprocessable Entity
+    assert response.status_code == 401  # AuthMiddleware retorna 401 antes do FastAPI processar
 
 
 def test_me_com_token_invalido_retorna_401():

@@ -10,6 +10,7 @@ locals {
     "identitytoolkit.googleapis.com",
     "firestore.googleapis.com",
     "storage.googleapis.com",
+    "secretmanager.googleapis.com",
   ]
 }
 
