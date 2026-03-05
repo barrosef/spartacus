@@ -4,18 +4,24 @@ import { useAuthNavigation } from "../../../navigation/AuthNavContext";
 import { SafeScreen } from "../../../components/ui/SafeScreen";
 import { WizardHeader } from "../../../components/wizard/WizardHeader";
 import { useWizard } from "../../../context/WizardContext";
+import { useGoogleSignIn } from "../../../lib/googleAuth";
 import { colors, typography, spacing, radius } from "../../../theme/tokens";
 
 export function Step0AuthMethod() {
   const navigation = useAuthNavigation();
   const { dispatch } = useWizard();
 
+  const google = useGoogleSignIn(() => {
+    // Após sign-in com Google, continua o wizard
+    navigation.navigate("Step4Perfil");
+  });
+
   function choose(method: "email" | "google") {
     dispatch({ type: "SET_AUTH_METHOD", payload: method });
     if (method === "email") {
       navigation.navigate("Step0bEmailSenha");
     } else {
-      navigation.navigate("Step4Perfil");
+      google.signIn();
     }
   }
 
@@ -49,10 +55,14 @@ export function Step0AuthMethod() {
           <MethodCard
             icon="G"
             iconStyle="google"
-            title="Google"
+            title={google.loading ? "Aguarde..." : "Google"}
             description="Use sua conta Google para entrar com um clique"
             onPress={() => choose("google")}
+            disabled={google.loading}
           />
+          {!!google.error && (
+            <Text style={styles.googleError}>{google.error}</Text>
+          )}
         </View>
 
         <View style={styles.footer}>
@@ -74,11 +84,17 @@ interface MethodCardProps {
   title: string;
   description: string;
   onPress: () => void;
+  disabled?: boolean;
 }
 
-function MethodCard({ icon, iconStyle, title, description, onPress }: MethodCardProps) {
+function MethodCard({ icon, iconStyle, title, description, onPress, disabled }: MethodCardProps) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={[styles.card, disabled && { opacity: 0.6 }]}
+      onPress={onPress}
+      activeOpacity={0.8}
+      disabled={disabled}
+    >
       <View style={[styles.cardIcon, iconStyle === "google" && styles.googleIcon]}>
         {iconStyle === "google" ? (
           <Text style={styles.googleLetter}>{icon}</Text>
@@ -182,6 +198,13 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 22,
     color: colors.mutedForeground,
+  },
+  googleError: {
+    fontSize: 12,
+    color: colors.error,
+    textAlign: "center",
+    fontFamily: typography.fontBody,
+    marginTop: -spacing.xs,
   },
   footer: {
     flexDirection: "row",
