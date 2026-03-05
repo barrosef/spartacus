@@ -16,15 +16,7 @@ import { DateInput } from "../../../components/ui/DateInput";
 import { useWizard, type Dependente } from "../../../context/WizardContext";
 import { colors, typography, spacing } from "../../../theme/tokens";
 import type { AuthStackParamList } from "../../../navigation/types";
-
-
-function formatCPF(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
+import { formatCPF } from "../../../utils/cpf";
 
 function calcAge(dataNascimento: string): number | null {
   const parts = dataNascimento.split("/");

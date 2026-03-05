@@ -15,20 +15,7 @@ import { Button } from "../../../components/ui/Button";
 import { DateInput } from "../../../components/ui/DateInput";
 import { useWizard } from "../../../context/WizardContext";
 import { colors, typography, spacing } from "../../../theme/tokens";
-
-function formatCPF(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
-
-
-function validateCPF(cpf: string) {
-  const digits = cpf.replace(/\D/g, "");
-  return digits.length === 11;
-}
+import { formatCPF, validateCPF } from "../../../utils/cpf";
 
 export function Step1DadosPessoais() {
   const navigation = useAuthNavigation();
