@@ -21,6 +21,8 @@ export interface Dependente {
 export interface WizardState {
   // Etapa 0 — método de autenticação
   authMethod: "email" | "google" | null;
+  email: string;
+  senha: string;
 
   // Etapa 1 — dados pessoais
   nome: string;
@@ -52,6 +54,8 @@ export interface WizardState {
 
 const initialState: WizardState = {
   authMethod: null,
+  email: "",
+  senha: "",
   nome: "",
   dataNascimento: "",
   cpf: "",
@@ -71,6 +75,7 @@ const initialState: WizardState = {
 
 type WizardAction =
   | { type: "SET_AUTH_METHOD"; payload: WizardState["authMethod"] }
+  | { type: "SET_CREDENCIAIS"; payload: { email: string; senha: string } }
   | { type: "SET_DADOS_PESSOAIS"; payload: Pick<WizardState, "nome" | "dataNascimento" | "cpf"> }
   | { type: "SET_CONTATO"; payload: Pick<WizardState, "celular" | "whatsapp"> }
   | { type: "SET_ENDERECO"; payload: Pick<WizardState, "cep" | "logradouro" | "numero" | "complemento" | "bairro" | "cidade" | "estado"> }
@@ -85,6 +90,8 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
     case "SET_AUTH_METHOD":
       return { ...state, authMethod: action.payload };
+    case "SET_CREDENCIAIS":
+      return { ...state, ...action.payload };
     case "SET_DADOS_PESSOAIS":
       return { ...state, ...action.payload };
     case "SET_CONTATO":

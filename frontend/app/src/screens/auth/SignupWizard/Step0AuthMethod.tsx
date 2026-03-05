@@ -12,7 +12,11 @@ export function Step0AuthMethod() {
 
   function choose(method: "email" | "google") {
     dispatch({ type: "SET_AUTH_METHOD", payload: method });
-    navigation.navigate("Step4Perfil");
+    if (method === "email") {
+      navigation.navigate("Step0bEmailSenha");
+    } else {
+      navigation.navigate("Step4Perfil");
+    }
   }
 
   return (

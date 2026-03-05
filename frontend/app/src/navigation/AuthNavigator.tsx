@@ -5,6 +5,7 @@ import { WizardProvider } from "../context/WizardContext";
 
 import { LoginScreen } from "../screens/auth/LoginScreen";
 import { Step0AuthMethod } from "../screens/auth/SignupWizard/Step0AuthMethod";
+import { Step0bEmailSenha } from "../screens/auth/SignupWizard/Step0bEmailSenha";
 import { Step1DadosPessoais } from "../screens/auth/SignupWizard/Step1DadosPessoais";
 import { Step2Contato } from "../screens/auth/SignupWizard/Step2Contato";
 import { Step3Endereco } from "../screens/auth/SignupWizard/Step3Endereco";
@@ -19,6 +20,7 @@ import { PendingScreen } from "../screens/auth/PendingScreen";
 const SCREENS: Record<AuthScreenName, React.ComponentType<any>> = {
   Login: LoginScreen,
   Step0AuthMethod,
+  Step0bEmailSenha,
   Step1DadosPessoais,
   Step2Contato,
   Step3Endereco,
