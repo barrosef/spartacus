@@ -38,6 +38,10 @@ export function Step5DepLista() {
     navigation.navigate("Step5DepTurmas", { dependenteId: depId });
   }
 
+  function handleRemove(depId: string) {
+    dispatch({ type: "REMOVE_DEPENDENTE", payload: depId });
+  }
+
   return (
     <SafeScreen noPadding>
       <WizardHeader
@@ -75,6 +79,14 @@ export function Step5DepLista() {
                       : " · Sem turmas"}
                   </Text>
                 </View>
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={() => handleRemove(dep.id)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.removeBtnText}>✕</Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.depActions}>
                 <TouchableOpacity
@@ -177,6 +189,21 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontBody,
     color: colors.mutedForeground,
     marginTop: 2,
+  },
+  removeBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(220,53,69,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(220,53,69,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removeBtnText: {
+    fontSize: 12,
+    color: colors.error,
+    fontFamily: typography.fontBodySemiBold,
   },
   depActions: {
     flexDirection: "row",

@@ -77,6 +77,7 @@ type WizardAction =
   | { type: "SET_ROLES"; payload: Role[] }
   | { type: "ADD_DEPENDENTE"; payload: Dependente }
   | { type: "UPDATE_DEPENDENTE"; payload: Dependente }
+  | { type: "REMOVE_DEPENDENTE"; payload: string }
   | { type: "SET_TURMAS_PROPRIAS"; payload: string[] }
   | { type: "RESET" };
 
@@ -103,6 +104,11 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
         dependentes: state.dependentes.map((d) =>
           d.id === action.payload.id ? action.payload : d
         ),
+      };
+    case "REMOVE_DEPENDENTE":
+      return {
+        ...state,
+        dependentes: state.dependentes.filter((d) => d.id !== action.payload),
       };
     case "SET_TURMAS_PROPRIAS":
       return { ...state, turmasPropriaIds: action.payload };
