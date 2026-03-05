@@ -49,7 +49,7 @@ export function Step2Contato() {
   function toggleSameAsPhone() {
     const next = !sameAsPhone;
     setSameAsPhone(next);
-    if (next) setWhatsapp(celular);
+    setWhatsapp(next ? celular : "");
   }
 
   function handleNext() {
