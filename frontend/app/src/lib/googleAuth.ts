@@ -5,7 +5,11 @@ import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { auth } from "./firebase";
 
 // Registra o handler de redirect para o Expo Go / builds
-WebBrowser.maybeCompleteAuthSession();
+try {
+  WebBrowser.maybeCompleteAuthSession();
+} catch {
+  // Ignora erros de inicialização do WebBrowser
+}
 
 // IDs de cliente OAuth — configure em .env:
 //   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
