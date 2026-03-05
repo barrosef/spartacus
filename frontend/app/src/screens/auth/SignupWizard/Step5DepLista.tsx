@@ -15,7 +15,7 @@ import { colors, typography, spacing, radius } from "../../../theme/tokens";
 
 export function Step5DepLista() {
   const navigation = useAuthNavigation();
-  const { state, hasClassRole } = useWizard();
+  const { state, dispatch, hasClassRole } = useWizard();
   const { dependentes } = state;
 
   function handleContinue() {
