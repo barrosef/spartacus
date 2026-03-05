@@ -1,27 +1,24 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { useAuthNavigation } from "../../../navigation/AuthNavContext";
 import { SafeScreen } from "../../../components/ui/SafeScreen";
 import { WizardHeader } from "../../../components/wizard/WizardHeader";
 import { useWizard } from "../../../context/WizardContext";
-import { useGoogleSignIn } from "../../../lib/googleAuth";
 import { colors, typography, spacing, radius } from "../../../theme/tokens";
 
 export function Step0AuthMethod() {
   const navigation = useAuthNavigation();
   const { dispatch } = useWizard();
 
-  const google = useGoogleSignIn(() => {
-    // Após sign-in com Google, continua o wizard
-    navigation.navigate("Step4Perfil");
-  });
-
   function choose(method: "email" | "google") {
     dispatch({ type: "SET_AUTH_METHOD", payload: method });
     if (method === "email") {
       navigation.navigate("Step0bEmailSenha");
     } else {
-      google.signIn();
+      Alert.alert(
+        "Indisponível no Expo Go",
+        "O cadastro com Google requer um build nativo. Use e-mail e senha para testar."
+      );
     }
   }
 
@@ -55,14 +52,10 @@ export function Step0AuthMethod() {
           <MethodCard
             icon="G"
             iconStyle="google"
-            title={google.loading ? "Aguarde..." : "Google"}
+            title="Google"
             description="Use sua conta Google para entrar com um clique"
             onPress={() => choose("google")}
-            disabled={google.loading}
           />
-          {!!google.error && (
-            <Text style={styles.googleError}>{google.error}</Text>
-          )}
         </View>
 
         <View style={styles.footer}>
@@ -198,13 +191,6 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 22,
     color: colors.mutedForeground,
-  },
-  googleError: {
-    fontSize: 12,
-    color: colors.error,
-    textAlign: "center",
-    fontFamily: typography.fontBody,
-    marginTop: -spacing.xs,
   },
   footer: {
     flexDirection: "row",

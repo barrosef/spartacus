@@ -13,7 +13,6 @@ import { StatusBar } from "expo-status-bar";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useAuthNavigation } from "../../navigation/AuthNavContext";
 import { auth } from "../../lib/firebase";
-import { useGoogleSignIn } from "../../lib/googleAuth";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { SafeScreen } from "../../components/ui/SafeScreen";
@@ -24,7 +23,6 @@ export function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const google = useGoogleSignIn();
 
   async function handleLogin() {
     if (!email || !password) return;
@@ -99,21 +97,20 @@ export function LoginScreen() {
                 <View style={styles.dividerLine} />
               </View>
 
-              {/* Google button */}
+              {/* Google button — requer build nativo (expo run:android / EAS) */}
               <TouchableOpacity
-                style={[styles.googleBtn, (!google.ready || google.loading) && { opacity: 0.6 }]}
-                activeOpacity={0.8}
-                onPress={google.signIn}
-                disabled={!google.ready || google.loading}
+                style={[styles.googleBtn, { opacity: 0.5 }]}
+                activeOpacity={1}
+                onPress={() =>
+                  Alert.alert(
+                    "Indisponível no Expo Go",
+                    "O login com Google requer um build nativo. Use e-mail e senha para testar."
+                  )
+                }
               >
                 <GoogleLogo />
-                <Text style={styles.googleText}>
-                  {google.loading ? "Aguarde..." : "Entrar com Google"}
-                </Text>
+                <Text style={styles.googleText}>Entrar com Google</Text>
               </TouchableOpacity>
-              {!!google.error && (
-                <Text style={styles.googleError}>{google.error}</Text>
-              )}
 
               {/* Create account link */}
               <View style={styles.createAccountRow}>
@@ -254,13 +251,6 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     fontSize: 15,
     fontFamily: typography.fontBodyMedium,
-  },
-  googleError: {
-    fontSize: 12,
-    color: colors.error,
-    textAlign: "center",
-    fontFamily: typography.fontBody,
-    marginTop: -spacing.sm,
   },
   createAccountRow: {
     flexDirection: "row",
