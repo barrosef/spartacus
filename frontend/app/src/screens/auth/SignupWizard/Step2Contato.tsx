@@ -31,9 +31,14 @@ export function Step2Contato() {
   const navigation = useAuthNavigation();
   const { state, dispatch } = useWizard();
 
+  const initialSame =
+    state.whatsapp === "" || state.whatsapp === state.celular;
+
   const [celular, setCelular] = useState(state.celular);
-  const [whatsapp, setWhatsapp] = useState(state.whatsapp);
-  const [sameAsPhone, setSameAsPhone] = useState(false);
+  const [whatsapp, setWhatsapp] = useState(
+    initialSame ? state.celular : state.whatsapp
+  );
+  const [sameAsPhone, setSameAsPhone] = useState(initialSame);
 
   function handleCelularChange(v: string) {
     const formatted = formatPhone(v);
@@ -85,23 +90,23 @@ export function Step2Contato() {
             />
 
             <View>
-              <Input
-                label="WhatsApp"
-                placeholder="(65) 99999-9999"
-                keyboardType="phone-pad"
-                value={whatsapp}
-                onChangeText={(v) => {
-                  setSameAsPhone(false);
-                  setWhatsapp(formatPhone(v));
-                }}
-                editable={!sameAsPhone}
-                maxLength={15}
-              />
               <CheckRow
                 checked={sameAsPhone}
                 onPress={toggleSameAsPhone}
-                label="Mesmo número do celular"
+                label="Meu celular e WhatsApp são iguais"
               />
+              {!sameAsPhone && (
+                <View style={{ marginTop: spacing.sm }}>
+                  <Input
+                    label="WhatsApp"
+                    placeholder="(65) 99999-9999"
+                    keyboardType="phone-pad"
+                    value={whatsapp}
+                    onChangeText={(v) => setWhatsapp(formatPhone(v))}
+                    maxLength={15}
+                  />
+                </View>
+              )}
             </View>
           </View>
 
