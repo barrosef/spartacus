@@ -1,7 +1,12 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import {
+  initializeAuth,
+  getAuth,
+  getReactNativePersistence,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Configuração injetada via variáveis de ambiente Expo (app.config.ts / eas.json)
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,5 +17,18 @@ const firebaseConfig = {
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);
-export const auth = getAuth(firebaseApp);
+
+// try/catch evita crash catastrófico no Hermes caso o native module do
+// AsyncStorage não esteja disponível no momento da avaliação do módulo
+let _auth: ReturnType<typeof getAuth>;
+try {
+  _auth = initializeAuth(firebaseApp, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch {
+  // Firebase já inicializado (ex: hot reload) ou AsyncStorage indisponível
+  _auth = getAuth(firebaseApp);
+}
+
+export const auth = _auth;
 export const googleProvider = new GoogleAuthProvider();
