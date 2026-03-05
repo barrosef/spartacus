@@ -56,8 +56,7 @@ export function SelecaoTurmasScreen({
 }: SelecaoTurmasScreenProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set(initialSelection));
 
-  function toggleTurma(id: string, disabled: boolean) {
-    if (disabled) return;
+  function toggleTurma(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -117,40 +116,20 @@ export function SelecaoTurmasScreen({
         ) : (
           <View style={styles.turmaList}>
             {turmas.map((turma) => {
-              const ageBlocked =
-                personAge !== undefined &&
-                turma.faixaEtaria !== undefined &&
-                (personAge < turma.faixaEtaria.min ||
-                  personAge > turma.faixaEtaria.max);
               const isSelected = selected.has(turma.id);
 
               return (
                 <TouchableOpacity
                   key={turma.id}
-                  style={[
-                    styles.turmaCard,
-                    isSelected && styles.turmaCardSelected,
-                    ageBlocked && styles.turmaCardBlocked,
-                  ]}
-                  onPress={() => toggleTurma(turma.id, ageBlocked)}
-                  activeOpacity={ageBlocked ? 1 : 0.8}
+                  style={[styles.turmaCard, isSelected && styles.turmaCardSelected]}
+                  onPress={() => toggleTurma(turma.id)}
+                  activeOpacity={0.8}
                 >
                   <View style={styles.turmaCardLeft}>
-                    <Text
-                      style={[
-                        styles.turmaNome,
-                        isSelected && styles.turmaNomeSelected,
-                        ageBlocked && styles.turmaTextBlocked,
-                      ]}
-                    >
+                    <Text style={[styles.turmaNome, isSelected && styles.turmaNomeSelected]}>
                       {turma.nome}
                     </Text>
-                    <Text
-                      style={[
-                        styles.turmaInfo,
-                        ageBlocked && styles.turmaTextBlocked,
-                      ]}
-                    >
+                    <Text style={styles.turmaInfo}>
                       {turma.modalidade} · {turma.horario}
                     </Text>
                     {turma.professor && (
@@ -163,20 +142,9 @@ export function SelecaoTurmasScreen({
                     )}
                   </View>
                   <View style={styles.turmaCardRight}>
-                    {ageBlocked ? (
-                      <Text style={styles.lockIcon}>🔒</Text>
-                    ) : (
-                      <View
-                        style={[
-                          styles.checkCircle,
-                          isSelected && styles.checkCircleSelected,
-                        ]}
-                      >
-                        {isSelected && (
-                          <Text style={styles.checkMark}>✓</Text>
-                        )}
-                      </View>
-                    )}
+                    <View style={[styles.checkCircle, isSelected && styles.checkCircleSelected]}>
+                      {isSelected && <Text style={styles.checkMark}>✓</Text>}
+                    </View>
                   </View>
                 </TouchableOpacity>
               );
@@ -272,9 +240,6 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: "rgba(198,163,78,0.08)",
   },
-  turmaCardBlocked: {
-    opacity: 0.45,
-  },
   turmaCardLeft: {
     flex: 1,
     gap: 2,
@@ -286,9 +251,6 @@ const styles = StyleSheet.create({
   },
   turmaNomeSelected: {
     color: colors.primary,
-  },
-  turmaTextBlocked: {
-    color: colors.mutedForeground,
   },
   turmaInfo: {
     fontSize: 13,
@@ -308,9 +270,6 @@ const styles = StyleSheet.create({
   },
   turmaCardRight: {
     marginLeft: spacing.md,
-  },
-  lockIcon: {
-    fontSize: 18,
   },
   checkCircle: {
     width: 24,
