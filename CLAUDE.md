@@ -79,7 +79,7 @@ Pipeline em `.github/workflows/ci-prod.yml`:
 | `WIF_PROVIDER` | Secret — resource name do WIF Provider (output do Terraform) |
 | `WIF_SERVICE_ACCOUNT` | Secret — email da SA `spartacus-github-actions` (output do Terraform) |
 | `EXPO_TOKEN` | Secret — token do Expo.dev |
-| `FIREBASE_PROJECT_ID` | Var (não Secret) — ID do projeto GCP |
+| `FIREBASE_PROJECT_ID` | Secret — ID do projeto GCP |
 
 ## Terraform (IaC)
 
