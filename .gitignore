@@ -17,3 +17,7 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Arquivos de contexto/referência local
+docs/context/
+docs/images/
