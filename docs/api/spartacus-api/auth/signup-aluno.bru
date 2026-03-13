@@ -1,0 +1,39 @@
+meta {
+  name: Signup — Aluno
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/signup
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Project-Id: {{projectId}}
+}
+
+body:json {
+  {
+    "authMethod": "email",
+    "email": "joao.ferreira@email.com",
+    "password": "Senha@456",
+    "name": "João Pedro Ferreira",
+    "birthDate": "22/08/2002",
+    "taxId": "987.654.321-00",
+    "phone": "(65) 99123-4567",
+    "whatsapp": "(65) 99123-4567",
+    "postalCode": "78350-000",
+    "street": "Avenida Brasil",
+    "number": "320",
+    "complement": "Fundos",
+    "neighborhood": "Jardim Tropical",
+    "city": "Brasnorte",
+    "state": "MT",
+    "roles": ["student"],
+    "dependents": [],
+    "classIds": ["t4", "t6"]
+  }
+}

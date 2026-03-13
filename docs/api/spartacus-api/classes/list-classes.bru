@@ -1,0 +1,15 @@
+meta {
+  name: Listar Turmas
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/projects/{{projectId}}/classes
+  body: none
+  auth: none
+}
+
+headers {
+  X-Project-Id: {{projectId}}
+}
