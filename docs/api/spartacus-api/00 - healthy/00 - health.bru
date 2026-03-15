@@ -1,0 +1,15 @@
+meta {
+  name: 00 - health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+headers {
+  X-Project-Id: {{projectId}}
+}
