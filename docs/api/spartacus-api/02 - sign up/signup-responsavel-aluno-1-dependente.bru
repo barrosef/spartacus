@@ -1,0 +1,47 @@
+meta {
+  name: Signup — Responsavel + Aluno (1 dependente)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/signup
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Project-Id: {{projectId}}
+}
+
+body:json {
+  {
+    "authMethod": "email",
+    "email": "rafael.oliveira@email.com",
+    "password": "Senha@321",
+    "name": "Rafael de Oliveira",
+    "birthDate": "28/12/1990",
+    "taxId": "321.654.987-00",
+    "phone": "(65) 99765-4321",
+    "whatsapp": "(65) 99765-4321",
+    "postalCode": "78350-000",
+    "street": "Rua Juscimeira",
+    "number": "73",
+    "complement": "",
+    "neighborhood": "Centro",
+    "city": "Brasnorte",
+    "state": "MT",
+    "roles": ["guardian", "student"],
+    "dependents": [
+      {
+        "id": "dep-1",
+        "name": "Pedro Oliveira",
+        "birthDate": "14/07/2014",
+        "taxId": null,
+        "classIds": ["t1"]
+      }
+    ],
+    "classIds": ["t4", "t7"]
+  }
+}

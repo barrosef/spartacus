@@ -1,0 +1,39 @@
+meta {
+  name: Signup — Apoiador
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/auth/signup
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Project-Id: {{projectId}}
+}
+
+body:json {
+  {
+    "authMethod": "email",
+    "email": "fernanda.lima@email.com",
+    "password": "Senha@555",
+    "name": "Fernanda Lima Souza",
+    "birthDate": "03/09/1975",
+    "taxId": "456.789.123-00",
+    "phone": "(65) 99654-3210",
+    "whatsapp": "(65) 99654-3210",
+    "postalCode": "78350-000",
+    "street": "Travessa Cuiabá",
+    "number": "45",
+    "complement": "Sala 3",
+    "neighborhood": "Vila Nova",
+    "city": "Brasnorte",
+    "state": "MT",
+    "roles": ["supporter"],
+    "dependents": [],
+    "classIds": []
+  }
+}
