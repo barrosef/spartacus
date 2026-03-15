@@ -1,0 +1,54 @@
+meta {
+  name: Signup — Responsavel (2 dependentes)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/signup
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Project-Id: {{projectId}}
+}
+
+body:json {
+  {
+    "authMethod": "email",
+    "email": "maria.santos@email.com",
+    "password": "Senha@789",
+    "name": "Maria Aparecida Santos",
+    "birthDate": "10/06/1980",
+    "taxId": "123.456.789-09",
+    "phone": "(65) 99876-5432",
+    "whatsapp": "(65) 99876-5432",
+    "postalCode": "78350-000",
+    "street": "Rua das Palmeiras",
+    "number": "88",
+    "complement": "Casa 2",
+    "neighborhood": "Nosso Lar",
+    "city": "Brasnorte",
+    "state": "MT",
+    "roles": ["guardian"],
+    "dependents": [
+      {
+        "id": "dep-1",
+        "name": "Lucas Santos",
+        "birthDate": "05/02/2015",
+        "taxId": null,
+        "classIds": ["t1", "t2"]
+      },
+      {
+        "id": "dep-2",
+        "name": "Ana Clara Santos",
+        "birthDate": "18/11/2012",
+        "taxId": null,
+        "classIds": ["t2", "t3"]
+      }
+    ],
+    "classIds": []
+  }
+}

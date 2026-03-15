@@ -1,0 +1,39 @@
+meta {
+  name: Signup — Professor
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/signup
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Project-Id: {{projectId}}
+}
+
+body:json {
+  {
+    "authMethod": "email",
+    "email": "barrosef@gmail.com",
+    "password": "Senha@123",
+    "name": "Carlos Eduardo da Silva",
+    "birthDate": "15/03/1985",
+    "taxId": "850.112.661-68",
+    "phone": "(65) 99887-6543",
+    "whatsapp": "(65) 99887-6543",
+    "postalCode": "78350-000",
+    "street": "Rua Rotary Internacional",
+    "number": "150",
+    "complement": "",
+    "neighborhood": "Centro",
+    "city": "Brasnorte",
+    "state": "MT",
+    "roles": ["teacher"],
+    "dependents": [],
+    "classIds": ["t4", "t5"]
+  }
+}
