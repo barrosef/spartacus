@@ -1,7 +1,9 @@
 # ADR-12 — Versionamento e Branching
 
 **Data:** 2026-02-28
-**Status:** Aceito
+**Status:** Revisado (2026-03-18)
+
+> **Revisão 2026-03-18:** Branching simplificado. Feature branches eliminadas — commits direto na `dev`, PRs de `dev → main`. Motivação: time pequeno (1 dev + Claude), overhead de feature branches sem benefício proporcional, esteira já funcional. Branches temporárias (`fix/`, `chore/`) mantidas apenas para hotfixes urgentes em produção. Conventional Commits e SemVer permanecem inalterados.
 
 ---
 
