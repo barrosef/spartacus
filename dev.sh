@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# dev.sh — Sobe o ambiente de desenvolvimento local completo
-#
-# Serviços:
-#   1. Firebase Emulators (Firestore, Auth, Storage) via docker-compose
-#   2. Backend FastAPI (uvicorn com hot-reload)
-#   3. App mobile Expo (Metro bundler)
+# dev.sh — Ambiente de desenvolvimento local do Spartacus
 #
 # Uso:
-#   ./dev.sh           # sobe tudo
-#   ./dev.sh stop      # para tudo
-#   ./dev.sh status    # mostra status dos serviços
+#   ./dev.sh [serviço] <ação>
+#
+# Serviços:
+#   emulator   Firebase Emulators (Firestore, Auth, Storage)
+#   backend    FastAPI (uvicorn com hot-reload)
+#   app        Expo (Metro bundler)
+#   (nenhum)   Todos os serviços
+#
+# Ações:
+#   start      Inicia o(s) serviço(s)  [padrão]
+#   stop       Para o(s) serviço(s)
+#   status     Mostra estado do(s) serviço(s)
+#   logs       Mostra logs em tempo real (backend, app)
+#
+# Exemplos:
+#   ./dev.sh                  # sobe tudo
+#   ./dev.sh backend start    # sobe só o backend
+#   ./dev.sh app stop         # para só o app
+#   ./dev.sh status           # status de todos
+#   ./dev.sh backend logs     # logs do backend em tempo real
+#   ./dev.sh app start --android  # sobe app no Android Studio
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -19,23 +32,26 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$ROOT_DIR/repos/backend"
 APP_DIR="$ROOT_DIR/repos/app"
 
-# Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 GOLD='\033[0;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 LOCAL_IP=$(hostname -I | awk '{print $1}')
 
-# ─── Funções ──────────────────────────────────────────────────────────────────
+# ─── Checks ──────────────────────────────────────────────────────────────────
 
-print_header() {
-  echo ""
-  echo -e "${GOLD}═══════════════════════════════════════════════════════════${NC}"
-  echo -e "${GOLD}  SPARTACUS — Ambiente de Desenvolvimento Local${NC}"
-  echo -e "${GOLD}═══════════════════════════════════════════════════════════${NC}"
-  echo ""
+is_emulator_running() {
+  curl -sf http://localhost:4000 &>/dev/null
+}
+
+is_backend_running() {
+  [ -f /tmp/spartacus-backend.pid ] && kill -0 "$(cat /tmp/spartacus-backend.pid)" 2>/dev/null
+}
+
+is_app_running() {
+  [ -f /tmp/spartacus-app.pid ] && kill -0 "$(cat /tmp/spartacus-app.pid)" 2>/dev/null
 }
 
 check_deps() {
@@ -43,9 +59,8 @@ check_deps() {
   command -v docker &>/dev/null || missing+=("docker")
   command -v uv &>/dev/null || missing+=("uv")
   command -v npx &>/dev/null || missing+=("npx (node/npm)")
-
   if [ ${#missing[@]} -gt 0 ]; then
-    echo -e "${RED}Dependências faltando: ${missing[*]}${NC}"
+    echo -e "${RED}Dependencias faltando: ${missing[*]}${NC}"
     exit 1
   fi
 }
@@ -55,10 +70,9 @@ check_env_files() {
     echo -e "${GOLD}Criando $BACKEND_DIR/.env a partir de .env.example...${NC}"
     cp "$BACKEND_DIR/.env.example" "$BACKEND_DIR/.env"
   fi
-
   if [ ! -f "$APP_DIR/.env" ]; then
-    echo -e "${RED}Arquivo $APP_DIR/.env não encontrado.${NC}"
-    echo -e "${RED}Crie-o com as variáveis Firebase e EXPO_PUBLIC_API_URL=http://$LOCAL_IP:8000${NC}"
+    echo -e "${RED}Arquivo $APP_DIR/.env nao encontrado.${NC}"
+    echo -e "${RED}Crie-o com as variaveis Firebase e EXPO_PUBLIC_API_URL=http://$LOCAL_IP:8000${NC}"
     exit 1
   fi
 }
@@ -67,166 +81,265 @@ ensure_app_api_url() {
   local env_file="$APP_DIR/.env"
   local current_url
   current_url=$(grep "^EXPO_PUBLIC_API_URL=" "$env_file" | tail -1 | cut -d= -f2-)
-
   if echo "$current_url" | grep -q "run\.app"; then
     echo -e "${GOLD}App .env aponta para Cloud Run. Trocando para local ($LOCAL_IP:8000)...${NC}"
     sed -i "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LOCAL_IP:8000|" "$env_file"
   fi
-
-  echo -e "${CYAN}  App API URL: http://$LOCAL_IP:8000${NC}"
 }
 
-start_emulators() {
-  echo -e "${CYAN}[1/3] Firebase Emulators...${NC}"
+# ─── Emulator ─────────────────────────────────────────────────────────────────
+
+emulator_start() {
+  if is_emulator_running; then
+    echo -e "  ${GREEN}●${NC} Emulators ja esta rodando — http://localhost:4000"
+    return
+  fi
+  echo -e "${CYAN}Firebase Emulators...${NC}"
   cd "$BACKEND_DIR"
   docker compose up -d 2>&1 | tail -3
-  echo -e "${GREEN}  Emulators: http://localhost:4000${NC}"
-  echo -e "  Firestore :8080 | Auth :9099 | Storage :9199"
-}
-
-wait_for_emulators() {
-  echo -n "  Aguardando emulators"
+  echo -n "  Aguardando"
   local retries=30
-  while ! curl -sf http://localhost:4000 &>/dev/null; do
+  while ! is_emulator_running; do
     retries=$((retries - 1))
     if [ $retries -le 0 ]; then
       echo -e "\n${RED}  Timeout aguardando emulators.${NC}"
-      echo "  Verifique com: docker compose -f $BACKEND_DIR/docker-compose.yml logs"
       exit 1
     fi
     echo -n "."
     sleep 2
   done
   echo -e " ${GREEN}OK${NC}"
+  echo -e "  ${GREEN}●${NC} Emulators     http://localhost:4000"
+  echo -e "    Firestore :8080 | Auth :9099 | Storage :9199"
 }
 
-start_backend() {
-  echo -e "${CYAN}[2/3] Backend FastAPI...${NC}"
-  cd "$BACKEND_DIR"
-
-  # Mata processo anterior se existir
-  if [ -f /tmp/spartacus-backend.pid ]; then
-    kill "$(cat /tmp/spartacus-backend.pid)" 2>/dev/null || true
-    rm -f /tmp/spartacus-backend.pid
-  fi
-
-  uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 \
-    > /tmp/spartacus-backend.log 2>&1 &
-  echo $! > /tmp/spartacus-backend.pid
-  echo -e "${GREEN}  Backend: http://$LOCAL_IP:8000${NC}"
-  echo "  Logs: tail -f /tmp/spartacus-backend.log"
-}
-
-start_app() {
-  echo -e "${CYAN}[3/3] App Expo...${NC}"
-  cd "$APP_DIR"
-
-  # Mata processo anterior se existir
-  if [ -f /tmp/spartacus-app.pid ]; then
-    kill "$(cat /tmp/spartacus-app.pid)" 2>/dev/null || true
-    rm -f /tmp/spartacus-app.pid
-  fi
-
-  npx expo start --lan \
-    > /tmp/spartacus-app.log 2>&1 &
-  echo $! > /tmp/spartacus-app.pid
-  echo -e "${GREEN}  Expo: http://$LOCAL_IP:8081${NC}"
-  echo "  Logs: tail -f /tmp/spartacus-app.log"
-}
-
-stop_all() {
-  echo -e "${GOLD}Parando todos os serviços...${NC}"
-
-  if [ -f /tmp/spartacus-app.pid ]; then
-    kill "$(cat /tmp/spartacus-app.pid)" 2>/dev/null || true
-    rm -f /tmp/spartacus-app.pid
-    echo -e "  ${RED}App Expo parado${NC}"
-  fi
-
-  if [ -f /tmp/spartacus-backend.pid ]; then
-    kill "$(cat /tmp/spartacus-backend.pid)" 2>/dev/null || true
-    rm -f /tmp/spartacus-backend.pid
-    echo -e "  ${RED}Backend parado${NC}"
-  fi
-
+emulator_stop() {
   cd "$BACKEND_DIR"
   docker compose down 2>/dev/null
-  echo -e "  ${RED}Emulators parados${NC}"
-
-  echo -e "\n${GREEN}Tudo parado.${NC}"
+  echo -e "  ${RED}●${NC} Emulators parado"
 }
 
-show_status() {
-  echo -e "${GOLD}Status dos serviços:${NC}"
-  echo ""
-
-  # Emulators
-  if curl -sf http://localhost:4000 &>/dev/null; then
+emulator_status() {
+  if is_emulator_running; then
     echo -e "  ${GREEN}●${NC} Emulators     http://localhost:4000"
   else
     echo -e "  ${RED}●${NC} Emulators     (parado)"
   fi
+}
 
-  # Backend
-  if [ -f /tmp/spartacus-backend.pid ] && kill -0 "$(cat /tmp/spartacus-backend.pid)" 2>/dev/null; then
+# ─── Backend ──────────────────────────────────────────────────────────────────
+
+backend_start() {
+  if is_backend_running; then
+    echo -e "  ${GREEN}●${NC} Backend ja esta rodando — http://$LOCAL_IP:8000"
+    return
+  fi
+  echo -e "${CYAN}Backend FastAPI...${NC}"
+  cd "$BACKEND_DIR"
+  uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 \
+    > /tmp/spartacus-backend.log 2>&1 &
+  echo $! > /tmp/spartacus-backend.pid
+  echo -e "  ${GREEN}●${NC} Backend       http://$LOCAL_IP:8000"
+  echo -e "    Docs: http://$LOCAL_IP:8000/docs"
+  echo -e "    Logs: ./dev.sh backend logs"
+}
+
+backend_stop() {
+  if [ -f /tmp/spartacus-backend.pid ]; then
+    kill "$(cat /tmp/spartacus-backend.pid)" 2>/dev/null || true
+    rm -f /tmp/spartacus-backend.pid
+  fi
+  echo -e "  ${RED}●${NC} Backend parado"
+}
+
+backend_status() {
+  if is_backend_running; then
     echo -e "  ${GREEN}●${NC} Backend       http://$LOCAL_IP:8000"
   else
     echo -e "  ${RED}●${NC} Backend       (parado)"
   fi
+}
 
-  # App
-  if [ -f /tmp/spartacus-app.pid ] && kill -0 "$(cat /tmp/spartacus-app.pid)" 2>/dev/null; then
+backend_logs() {
+  if [ ! -f /tmp/spartacus-backend.log ]; then
+    echo -e "${RED}Sem arquivo de log. Backend foi iniciado?${NC}"
+    exit 1
+  fi
+  tail -f /tmp/spartacus-backend.log
+}
+
+# ─── App ──────────────────────────────────────────────────────────────────────
+
+app_start() {
+  if is_app_running; then
+    echo -e "  ${GREEN}●${NC} App Expo ja esta rodando — http://$LOCAL_IP:8081"
+    return
+  fi
+
+  check_env_files
+  ensure_app_api_url
+
+  echo -e "${CYAN}App Expo...${NC}"
+  cd "$APP_DIR"
+
+  # Detecta flag --android
+  local expo_args="--lan"
+  if [[ " $* " == *" --android "* ]] || [[ " $* " == *" --android" ]]; then
+    expo_args="--lan --android"
+    echo -e "  ${GOLD}Modo Android Studio ativado${NC}"
+  fi
+
+  npx expo start $expo_args \
+    > /tmp/spartacus-app.log 2>&1 &
+  echo $! > /tmp/spartacus-app.pid
+  echo -e "  ${GREEN}●${NC} App Expo      http://$LOCAL_IP:8081"
+  echo -e "    Logs: ./dev.sh app logs"
+}
+
+app_stop() {
+  if [ -f /tmp/spartacus-app.pid ]; then
+    kill "$(cat /tmp/spartacus-app.pid)" 2>/dev/null || true
+    rm -f /tmp/spartacus-app.pid
+  fi
+  echo -e "  ${RED}●${NC} App Expo parado"
+}
+
+app_status() {
+  if is_app_running; then
     echo -e "  ${GREEN}●${NC} App Expo      http://$LOCAL_IP:8081"
   else
     echo -e "  ${RED}●${NC} App Expo      (parado)"
   fi
+}
 
+app_logs() {
+  if [ ! -f /tmp/spartacus-app.log ]; then
+    echo -e "${RED}Sem arquivo de log. App foi iniciado?${NC}"
+    exit 1
+  fi
+  tail -f /tmp/spartacus-app.log
+}
+
+# ─── All ──────────────────────────────────────────────────────────────────────
+
+all_start() {
+  echo ""
+  echo -e "${GOLD}=======================================================${NC}"
+  echo -e "${GOLD}  SPARTACUS — Ambiente de Desenvolvimento Local${NC}"
+  echo -e "${GOLD}=======================================================${NC}"
+  echo ""
+  check_deps
+  check_env_files
+  ensure_app_api_url
+  echo ""
+  emulator_start
+  echo ""
+  backend_start
+  sleep 2
+  echo ""
+  app_start "$@"
+  echo ""
+  echo -e "${GOLD}=======================================================${NC}"
+  echo -e "  ${GREEN}Ambiente local pronto!${NC}"
+  echo -e "${GOLD}=======================================================${NC}"
+  echo ""
+  echo -e "  ${GOLD}Comandos:${NC}"
+  echo "    ./dev.sh status           — status de todos"
+  echo "    ./dev.sh stop             — parar tudo"
+  echo "    ./dev.sh backend logs     — logs do backend"
+  echo "    ./dev.sh app logs         — logs do Expo"
   echo ""
 }
 
-print_summary() {
+all_stop() {
+  echo -e "${GOLD}Parando todos os servicos...${NC}"
+  app_stop
+  backend_stop
+  emulator_stop
+  echo -e "\n${GREEN}Tudo parado.${NC}"
+}
+
+all_status() {
+  echo -e "${GOLD}Status dos servicos:${NC}"
   echo ""
-  echo -e "${GOLD}═══════════════════════════════════════════════════════════${NC}"
-  echo -e "  ${GREEN}Ambiente local pronto!${NC}"
-  echo -e "${GOLD}═══════════════════════════════════════════════════════════${NC}"
+  emulator_status
+  backend_status
+  app_status
   echo ""
-  echo -e "  ${CYAN}Emulators UI${NC}  http://localhost:4000"
-  echo -e "  ${CYAN}Backend API${NC}   http://$LOCAL_IP:8000"
-  echo -e "  ${CYAN}Backend docs${NC}  http://$LOCAL_IP:8000/docs"
-  echo -e "  ${CYAN}App Expo${NC}      http://$LOCAL_IP:8081"
+}
+
+# ─── Uso ──────────────────────────────────────────────────────────────────────
+
+usage() {
+  echo "Uso: ./dev.sh [servico] <acao>"
   echo ""
-  echo -e "  ${GOLD}Comandos:${NC}"
-  echo "    ./dev.sh status   — ver status dos serviços"
-  echo "    ./dev.sh stop     — parar tudo"
-  echo "    tail -f /tmp/spartacus-backend.log  — logs do backend"
-  echo "    tail -f /tmp/spartacus-app.log      — logs do Expo"
+  echo "Servicos: emulator, backend, app (ou nenhum para todos)"
+  echo "Acoes:    start, stop, status, logs"
   echo ""
+  echo "Exemplos:"
+  echo "  ./dev.sh                      # sobe tudo"
+  echo "  ./dev.sh backend start        # sobe so o backend"
+  echo "  ./dev.sh backend logs         # logs do backend"
+  echo "  ./dev.sh app start --android  # sobe app no Android Studio"
+  echo "  ./dev.sh stop                 # para tudo"
 }
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
-case "${1:-start}" in
+SERVICE="${1:-}"
+ACTION="${2:-start}"
+EXTRA_ARGS="${*:3}"
+
+case "$SERVICE" in
+  emulator)
+    case "$ACTION" in
+      start)  emulator_start ;;
+      stop)   emulator_stop ;;
+      status) emulator_status ;;
+      logs)   echo -e "${GOLD}Emulators logs via docker:${NC}"; cd "$BACKEND_DIR" && docker compose logs -f ;;
+      *)      usage; exit 1 ;;
+    esac
+    ;;
+  backend)
+    case "$ACTION" in
+      start)  backend_start ;;
+      stop)   backend_stop ;;
+      status) backend_status ;;
+      logs)   backend_logs ;;
+      *)      usage; exit 1 ;;
+    esac
+    ;;
+  app)
+    case "$ACTION" in
+      start)  app_start $EXTRA_ARGS ;;
+      stop)   app_stop ;;
+      status) app_status ;;
+      logs)   app_logs ;;
+      *)      usage; exit 1 ;;
+    esac
+    ;;
+  start)
+    all_start "${@:2}"
+    ;;
   stop)
-    stop_all
+    all_stop
     ;;
   status)
-    show_status
+    all_status
     ;;
-  start|"")
-    print_header
-    check_deps
-    check_env_files
-    ensure_app_api_url
-    echo ""
-    start_emulators
-    wait_for_emulators
-    start_backend
-    sleep 2
-    start_app
-    print_summary
+  logs)
+    echo -e "${GOLD}Especifique o servico: ./dev.sh backend logs  ou  ./dev.sh app logs${NC}"
+    exit 1
+    ;;
+  help|--help|-h)
+    usage
+    ;;
+  "")
+    all_start "${@:2}"
     ;;
   *)
-    echo "Uso: ./dev.sh [start|stop|status]"
+    echo -e "${RED}Servico desconhecido: $SERVICE${NC}"
+    usage
     exit 1
     ;;
 esac
