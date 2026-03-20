@@ -17,6 +17,8 @@
 #   status     Mostra estado do(s) serviço(s)
 #   logs       Mostra logs em tempo real (backend, app)
 #   build      Gera pacote Android (app only): apk ou aab
+#   deploy     Build APK + instala no Android via USB (app only)
+#   devlog     Mostra logs do app Android no console (app only)
 #
 # Exemplos:
 #   ./dev.sh                  # sobe tudo
@@ -27,6 +29,8 @@
 #   ./dev.sh app start --android  # sobe app no Android Studio
 #   ./dev.sh app build apk    # gera APK local (profile: preview)
 #   ./dev.sh app build aab    # gera AAB local (profile: production)
+#   ./dev.sh app deploy       # build + instala APK no celular via USB
+#   ./dev.sh app devlog       # logs JS do app no celular em tempo real
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -226,11 +230,63 @@ app_build() {
   local profile="preview"
   if [ "$format" = "aab" ]; then
     profile="production"
+
+    # Auto-increment versionCode in app.json
+    local app_json="$APP_DIR/app.json"
+    local current_version
+    current_version=$(grep -o '"versionCode": *[0-9]*' "$app_json" | grep -o '[0-9]*')
+    local new_version=$((current_version + 1))
+    sed -i "s/\"versionCode\": *$current_version/\"versionCode\": $new_version/" "$app_json"
+    echo -e "${GOLD}versionCode: $current_version → $new_version${NC}"
   fi
 
   echo -e "${CYAN}Build Android ($format) — profile: $profile${NC}"
   cd "$APP_DIR"
   npx eas-cli build --platform android --profile "$profile" --local
+}
+
+app_deploy() {
+  if ! command -v adb &>/dev/null; then
+    echo -e "${RED}adb nao encontrado. Instale o Android SDK Platform-Tools.${NC}"
+    exit 1
+  fi
+  if ! adb devices 2>/dev/null | grep -q "device$"; then
+    echo -e "${RED}Nenhum dispositivo Android conectado. Verifique USB e depuracao USB.${NC}"
+    exit 1
+  fi
+
+  echo -e "${CYAN}Build APK (preview)...${NC}"
+  cd "$APP_DIR"
+  npx eas-cli build --platform android --profile preview --local
+
+  local apk
+  apk=$(ls -t "$APP_DIR"/build-*.apk 2>/dev/null | head -1)
+  if [ -z "$apk" ]; then
+    echo -e "${RED}Nenhum APK encontrado apos o build.${NC}"
+    exit 1
+  fi
+
+  echo -e "${CYAN}Instalando $apk no dispositivo...${NC}"
+  adb install -r "$apk"
+  echo -e "${GREEN}APK instalado com sucesso.${NC}"
+
+  echo -e "${CYAN}Abrindo app...${NC}"
+  adb shell am start -n br.com.spartacus.app/.MainActivity
+  echo -e "${GREEN}App iniciado no dispositivo.${NC}"
+}
+
+app_devlog() {
+  if ! command -v adb &>/dev/null; then
+    echo -e "${RED}adb nao encontrado. Instale o Android SDK Platform-Tools.${NC}"
+    exit 1
+  fi
+  if ! adb devices 2>/dev/null | grep -q "device$"; then
+    echo -e "${RED}Nenhum dispositivo Android conectado.${NC}"
+    exit 1
+  fi
+  echo -e "${CYAN}Logs do Spartacus no dispositivo (Ctrl+C para sair)...${NC}"
+  adb logcat -c
+  adb logcat -s "ReactNativeJS:*" "AndroidRuntime:*"
 }
 
 app_logs() {
@@ -295,7 +351,7 @@ usage() {
   echo "Uso: ./dev.sh [servico] <acao>"
   echo ""
   echo "Servicos: emulator, backend, app (ou nenhum para todos)"
-  echo "Acoes:    start, stop, status, logs, build"
+  echo "Acoes:    start, stop, status, logs, build, deploy, devlog"
   echo ""
   echo "Exemplos:"
   echo "  ./dev.sh                      # sobe tudo"
@@ -304,6 +360,8 @@ usage() {
   echo "  ./dev.sh app start --android  # sobe app no Android Studio"
   echo "  ./dev.sh app build apk        # gera APK local (preview)"
   echo "  ./dev.sh app build aab        # gera AAB local (production)"
+  echo "  ./dev.sh app deploy           # build + instala no celular via USB"
+  echo "  ./dev.sh app devlog           # logs JS do celular em tempo real"
   echo "  ./dev.sh stop                 # para tudo"
 }
 
@@ -338,8 +396,10 @@ case "$SERVICE" in
       stop)   app_stop ;;
       status) app_status ;;
       logs)   app_logs ;;
-      build)  app_build "$EXTRA_ARGS" ;;
-      *)      usage; exit 1 ;;
+      build)   app_build "$EXTRA_ARGS" ;;
+      deploy)  app_deploy ;;
+      devlog)  app_devlog ;;
+      *)       usage; exit 1 ;;
     esac
     ;;
   start)
