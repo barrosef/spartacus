@@ -19,6 +19,7 @@
 #   build      Gera pacote Android (app only): apk ou aab
 #   deploy     Build APK + instala no Android via USB (app only)
 #   devlog     Mostra logs do app Android no console (app only)
+#   publish    Build AAB + publica na Play Store internal track (app only)
 #
 # Exemplos:
 #   ./dev.sh                  # sobe tudo
@@ -31,6 +32,7 @@
 #   ./dev.sh app build aab    # gera AAB local (profile: production)
 #   ./dev.sh app deploy       # build + instala APK no celular via USB
 #   ./dev.sh app devlog       # logs JS do app no celular em tempo real
+#   ./dev.sh app publish      # build AAB + publica na Play Store (internal)
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -245,6 +247,35 @@ app_build() {
   npx eas-cli build --platform android --profile "$profile" --local
 }
 
+app_publish() {
+  echo -e "${GOLD}=======================================================${NC}"
+  echo -e "${GOLD}  Build AAB + Publish to Play Store (internal track)${NC}"
+  echo -e "${GOLD}=======================================================${NC}"
+  echo ""
+
+  # Increment versionCode
+  local app_json="$APP_DIR/app.json"
+  local current_version
+  current_version=$(grep -o '"versionCode": *[0-9]*' "$app_json" | grep -o '[0-9]*')
+  local new_version=$((current_version + 1))
+  sed -i "s/\"versionCode\": *$current_version/\"versionCode\": $new_version/" "$app_json"
+  echo -e "${GOLD}versionCode: $current_version → $new_version${NC}"
+
+  # Build AAB
+  echo -e "${CYAN}Building AAB (production)...${NC}"
+  cd "$APP_DIR"
+  npx eas-cli build --platform android --profile production --local
+
+  # Submit to Play Store
+  echo -e "${CYAN}Submitting to Play Store (internal track)...${NC}"
+  npx eas-cli submit --platform android --profile production --latest --non-interactive
+
+  echo ""
+  echo -e "${GREEN}Publicado com sucesso na track interna do Play Store.${NC}"
+  echo -e "  versionCode: $new_version"
+  echo -e "  Acesse: https://play.google.com/console"
+}
+
 app_deploy() {
   if ! command -v adb &>/dev/null; then
     echo -e "${RED}adb nao encontrado. Instale o Android SDK Platform-Tools.${NC}"
@@ -362,6 +393,7 @@ usage() {
   echo "  ./dev.sh app build aab        # gera AAB local (production)"
   echo "  ./dev.sh app deploy           # build + instala no celular via USB"
   echo "  ./dev.sh app devlog           # logs JS do celular em tempo real"
+  echo "  ./dev.sh app publish          # build AAB + publica na Play Store"
   echo "  ./dev.sh stop                 # para tudo"
 }
 
@@ -399,6 +431,7 @@ case "$SERVICE" in
       build)   app_build "$EXTRA_ARGS" ;;
       deploy)  app_deploy ;;
       devlog)  app_devlog ;;
+      publish) app_publish ;;
       *)       usage; exit 1 ;;
     esac
     ;;
