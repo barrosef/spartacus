@@ -16,6 +16,7 @@
 #   stop       Para o(s) serviço(s)
 #   status     Mostra estado do(s) serviço(s)
 #   logs       Mostra logs em tempo real (backend, app)
+#   build      Gera pacote Android (app only): apk ou aab
 #
 # Exemplos:
 #   ./dev.sh                  # sobe tudo
@@ -24,6 +25,8 @@
 #   ./dev.sh status           # status de todos
 #   ./dev.sh backend logs     # logs do backend em tempo real
 #   ./dev.sh app start --android  # sobe app no Android Studio
+#   ./dev.sh app build apk    # gera APK local (profile: preview)
+#   ./dev.sh app build aab    # gera AAB local (profile: production)
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -212,6 +215,24 @@ app_status() {
   fi
 }
 
+app_build() {
+  local format="${1:-}"
+  if [[ "$format" != "apk" && "$format" != "aab" ]]; then
+    echo -e "${RED}Formato invalido: $format${NC}"
+    echo "Uso: ./dev.sh app build {apk | aab}"
+    exit 1
+  fi
+
+  local profile="preview"
+  if [ "$format" = "aab" ]; then
+    profile="production"
+  fi
+
+  echo -e "${CYAN}Build Android ($format) — profile: $profile${NC}"
+  cd "$APP_DIR"
+  npx eas-cli build --platform android --profile "$profile" --local
+}
+
 app_logs() {
   if [ ! -f /tmp/spartacus-app.log ]; then
     echo -e "${RED}Sem arquivo de log. App foi iniciado?${NC}"
@@ -274,13 +295,15 @@ usage() {
   echo "Uso: ./dev.sh [servico] <acao>"
   echo ""
   echo "Servicos: emulator, backend, app (ou nenhum para todos)"
-  echo "Acoes:    start, stop, status, logs"
+  echo "Acoes:    start, stop, status, logs, build"
   echo ""
   echo "Exemplos:"
   echo "  ./dev.sh                      # sobe tudo"
   echo "  ./dev.sh backend start        # sobe so o backend"
   echo "  ./dev.sh backend logs         # logs do backend"
   echo "  ./dev.sh app start --android  # sobe app no Android Studio"
+  echo "  ./dev.sh app build apk        # gera APK local (preview)"
+  echo "  ./dev.sh app build aab        # gera AAB local (production)"
   echo "  ./dev.sh stop                 # para tudo"
 }
 
@@ -315,6 +338,7 @@ case "$SERVICE" in
       stop)   app_stop ;;
       status) app_status ;;
       logs)   app_logs ;;
+      build)  app_build "$EXTRA_ARGS" ;;
       *)      usage; exit 1 ;;
     esac
     ;;
