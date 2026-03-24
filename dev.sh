@@ -9,6 +9,7 @@
 #   emulator   Firebase Emulators (Firestore, Auth, Storage)
 #   backend    FastAPI (uvicorn com hot-reload)
 #   app        Expo (Metro bundler)
+#   backoffice Vite dev server (React)
 #   (nenhum)   Todos os serviços
 #
 # Ações:
@@ -33,6 +34,7 @@
 #   ./dev.sh app deploy       # build + instala APK no celular via USB
 #   ./dev.sh app devlog       # logs JS do app no celular em tempo real
 #   ./dev.sh app publish      # build AAB + publica na Play Store (internal)
+#   ./dev.sh backoffice       # sobe backoffice dev server
 # ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -40,6 +42,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$ROOT_DIR/repos/backend"
 APP_DIR="$ROOT_DIR/repos/app"
+BACKOFFICE_DIR="$ROOT_DIR/repos/backoffice"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -266,9 +269,17 @@ app_publish() {
   cd "$APP_DIR"
   npx eas-cli build --platform android --profile production --local
 
+  # Find the AAB just built
+  local aab
+  aab=$(ls -t "$APP_DIR"/build-*.aab 2>/dev/null | head -1)
+  if [ -z "$aab" ]; then
+    echo -e "${RED}Nenhum AAB encontrado apos o build.${NC}"
+    exit 1
+  fi
+
   # Submit to Play Store
-  echo -e "${CYAN}Submitting to Play Store (internal track)...${NC}"
-  npx eas-cli submit --platform android --profile production --latest --non-interactive
+  echo -e "${CYAN}Submitting $aab to Play Store (internal track)...${NC}"
+  npx eas-cli submit --platform android --profile production --path "$aab" --non-interactive
 
   echo ""
   echo -e "${GREEN}Publicado com sucesso na track interna do Play Store.${NC}"
@@ -306,6 +317,32 @@ app_deploy() {
   echo -e "${GREEN}App iniciado no dispositivo.${NC}"
 }
 
+app_install() {
+  if ! command -v adb &>/dev/null; then
+    echo -e "${RED}adb nao encontrado. Instale o Android SDK Platform-Tools.${NC}"
+    exit 1
+  fi
+  if ! adb devices 2>/dev/null | grep -q "device$"; then
+    echo -e "${RED}Nenhum dispositivo Android conectado.${NC}"
+    exit 1
+  fi
+
+  local apk
+  apk=$(ls -t "$APP_DIR"/build-*.apk 2>/dev/null | head -1)
+  if [ -z "$apk" ]; then
+    echo -e "${RED}Nenhum APK encontrado. Rode './dev.sh app build apk' primeiro.${NC}"
+    exit 1
+  fi
+
+  echo -e "${CYAN}Instalando $apk no dispositivo...${NC}"
+  adb install -r "$apk"
+  echo -e "${GREEN}APK instalado com sucesso.${NC}"
+
+  echo -e "${CYAN}Abrindo app...${NC}"
+  adb shell am start -n br.com.spartacus.app/.MainActivity
+  echo -e "${GREEN}App iniciado no dispositivo.${NC}"
+}
+
 app_devlog() {
   if ! command -v adb &>/dev/null; then
     echo -e "${RED}adb nao encontrado. Instale o Android SDK Platform-Tools.${NC}"
@@ -328,6 +365,50 @@ app_logs() {
   tail -f /tmp/spartacus-app.log
 }
 
+# ─── Backoffice ──────────────────────────────────────────────────────────────
+
+is_backoffice_running() {
+  [ -f /tmp/spartacus-backoffice.pid ] && kill -0 "$(cat /tmp/spartacus-backoffice.pid)" 2>/dev/null
+}
+
+backoffice_start() {
+  if is_backoffice_running; then
+    echo -e "  ${GREEN}●${NC} Backoffice ja esta rodando — http://localhost:5173"
+    return
+  fi
+  echo -e "${CYAN}Backoffice Vite...${NC}"
+  cd "$BACKOFFICE_DIR"
+  npx vite --host \
+    > /tmp/spartacus-backoffice.log 2>&1 &
+  echo $! > /tmp/spartacus-backoffice.pid
+  echo -e "  ${GREEN}●${NC} Backoffice    http://localhost:5173"
+  echo -e "    Logs: ./dev.sh backoffice logs"
+}
+
+backoffice_stop() {
+  if [ -f /tmp/spartacus-backoffice.pid ]; then
+    kill "$(cat /tmp/spartacus-backoffice.pid)" 2>/dev/null || true
+    rm -f /tmp/spartacus-backoffice.pid
+  fi
+  echo -e "  ${RED}●${NC} Backoffice parado"
+}
+
+backoffice_status() {
+  if is_backoffice_running; then
+    echo -e "  ${GREEN}●${NC} Backoffice    http://localhost:5173"
+  else
+    echo -e "  ${RED}●${NC} Backoffice    (parado)"
+  fi
+}
+
+backoffice_logs() {
+  if [ ! -f /tmp/spartacus-backoffice.log ]; then
+    echo -e "${RED}Sem arquivo de log. Backoffice foi iniciado?${NC}"
+    exit 1
+  fi
+  tail -f /tmp/spartacus-backoffice.log
+}
+
 # ─── All ──────────────────────────────────────────────────────────────────────
 
 all_start() {
@@ -347,6 +428,8 @@ all_start() {
   echo ""
   app_start "$@"
   echo ""
+  backoffice_start
+  echo ""
   echo -e "${GOLD}=======================================================${NC}"
   echo -e "  ${GREEN}Ambiente local pronto!${NC}"
   echo -e "${GOLD}=======================================================${NC}"
@@ -361,6 +444,7 @@ all_start() {
 
 all_stop() {
   echo -e "${GOLD}Parando todos os servicos...${NC}"
+  backoffice_stop
   app_stop
   backend_stop
   emulator_stop
@@ -373,6 +457,7 @@ all_status() {
   emulator_status
   backend_status
   app_status
+  backoffice_status
   echo ""
 }
 
@@ -381,7 +466,7 @@ all_status() {
 usage() {
   echo "Uso: ./dev.sh [servico] <acao>"
   echo ""
-  echo "Servicos: emulator, backend, app (ou nenhum para todos)"
+  echo "Servicos: emulator, backend, app, backoffice (ou nenhum para todos)"
   echo "Acoes:    start, stop, status, logs, build, deploy, devlog"
   echo ""
   echo "Exemplos:"
@@ -394,6 +479,8 @@ usage() {
   echo "  ./dev.sh app deploy           # build + instala no celular via USB"
   echo "  ./dev.sh app devlog           # logs JS do celular em tempo real"
   echo "  ./dev.sh app publish          # build AAB + publica na Play Store"
+  echo "  ./dev.sh backoffice           # sobe backoffice dev server"
+  echo "  ./dev.sh backoffice logs      # logs do backoffice"
   echo "  ./dev.sh stop                 # para tudo"
 }
 
@@ -430,9 +517,19 @@ case "$SERVICE" in
       logs)   app_logs ;;
       build)   app_build "$EXTRA_ARGS" ;;
       deploy)  app_deploy ;;
+      install) app_install ;;
       devlog)  app_devlog ;;
       publish) app_publish ;;
       *)       usage; exit 1 ;;
+    esac
+    ;;
+  backoffice)
+    case "$ACTION" in
+      start)  backoffice_start ;;
+      stop)   backoffice_stop ;;
+      status) backoffice_status ;;
+      logs)   backoffice_logs ;;
+      *)      usage; exit 1 ;;
     esac
     ;;
   start)
