@@ -1,12 +1,12 @@
 # WORKFLOW.md — Contrato de Desenvolvimento Humano & Claude
 
-**Última atualização:** 24 de fevereiro de 2026
+**Última atualização:** 18 de março de 2026
 
 ---
 
 ## 1. Princípios
 
-Claude opera com **autonomia de execução** e **aprovação em pontos-chave**. Não pede permissão para decisões técnicas de implementação, mas para nos gates que impactam escopo, estrutura e entrega.
+Claude opera com **autonomia de execução** e **aprovação em pontos-chave**. Não pede permissão para decisões técnicas de implementação, mas para gates que impactam escopo, estrutura e entrega.
 
 ### Gates de aprovação obrigatória
 
@@ -14,8 +14,7 @@ Claude opera com **autonomia de execução** e **aprovação em pontos-chave**. 
 |------|-------------|------------------|
 | G1 — User Story | Humano | Escopo, critérios de aceite, módulos impactados |
 | G2 — Plano de Desenvolvimento | Humano | Abordagem técnica, arquivos impactados, estratégia de testes |
-| G3 — PR para dev | Humano | Código final, testes passando, funcionalidade validada |
-| G4 — Release (dev → main) | Humano | Tag de versão, merge para main |
+| G3 — PR (dev → main) | Humano | Código final, testes passando, funcionalidade validada |
 
 ### Decisões que Claude toma sem aprovação
 
@@ -28,6 +27,18 @@ Claude opera com **autonomia de execução** e **aprovação em pontos-chave**. 
 ---
 
 ## 2. Fluxo de Desenvolvimento
+
+### Branching simplificado
+
+```
+dev ─── commits diretos ──── PR ──► main
+                                  (CI/CD dispara deploy)
+```
+
+- **`dev`**: branch de trabalho — commits diretos, sem feature branches
+- **`main`**: produção — recebe merges de `dev` via PR
+- **Nunca commitar direto em `main`**
+- Branches temporárias (`fix/`, `chore/`) permitidas apenas para hotfixes urgentes em produção
 
 ### Fase 1 — Definição (requer G1)
 
@@ -48,8 +59,6 @@ Humano aprova / ajusta → ✅ G1
 Claude cria card no ClickUp via API
 ```
 
-**Regra:** Toda user story DEVE ter critérios de aceite claros e testáveis e ao menos um módulo impactado declarado. Sem critérios ou sem módulo, sem aprovação.
-
 **Módulos válidos:**
 
 | Módulo | Descrição |
@@ -57,8 +66,6 @@ Claude cria card no ClickUp via API
 | `backend` | API FastAPI (Cloud Run) |
 | `backoffice` | Web admin em React (Firebase Hosting) |
 | `app` | Aplicativo mobile em React Native + Expo |
-
-> Exemplos: Login social → `[backoffice, app]` · Postagem de conteúdo → `[app]` · Endpoint de presença → `[backend]`
 
 ### Fase 2 — Planejamento (requer G2)
 
@@ -75,7 +82,7 @@ Humano aprova / ajusta → ✅ G2
 ### Fase 3 — Implementação (autônoma)
 
 ```
-Claude cria branch a partir de dev: feat/<card_id>-<resumo-titulo-até-50-chars>
+Claude faz checkout em dev
         ↓
 Claude implementa código
         ↓
@@ -83,17 +90,14 @@ Claude escreve testes (unitários + integração)
         ↓
 Claude verifica que testes passam localmente
         ↓
-Claude faz commit(s) semânticos e push
+Claude faz commit(s) semânticos e push para dev
 ```
 
-**Convenção de commits:**
+**Convenção de commits:** Conventional Commits (ver ADR-12)
 ```
-feat(backend): adiciona endpoint de cadastro de usuário
-test(backend): testes unitários para cadastro de usuário
-feat(backoffice): formulário de cadastro
-test(backoffice): testes do formulário de cadastro
-feat(app): tela de login social
-test(app): testes do fluxo de login
+feat(backend): add signup idempotency check
+fix(app): merge onBlur handlers in Input component
+test(backend): add check-email endpoint tests
 ```
 
 ### Fase 4 — Teste e Ajuste (colaborativa)
@@ -106,45 +110,24 @@ Humano testa manualmente
   ┌─ Aprovado → Fase 5
   └─ Reprovado → Humano descreve problemas
         ↓
-      Claude ajusta (sem nova aprovação)
-        ↓
-      Claude roda testes, commita, push
-        ↓
-      Humano testa novamente
+      Claude ajusta, commita, push para dev
         ↓
       (repete até aprovação)
 ```
 
-**Limite de segurança:** Se o ciclo ultrapassar **3 iterações**, Claude para e questiona se os critérios de aceite estão claros ou se o escopo mudou. Mudança de escopo = novo card.
+**Limite de segurança:** Se o ciclo ultrapassar **3 iterações**, Claude para e questiona se os critérios de aceite estão claros ou se o escopo mudou.
 
 ### Fase 5 — Pull Request (requer G3)
 
 ```
-Claude abre PR: feat/<card_id>-<resumo-titulo> → dev
-  - Título: [CU-<card_id>] <título do card>
-  - Descrição: resumo das mudanças, módulos impactados, como testar
+Claude abre PR: dev → main
+  - Título descritivo
+  - Descrição: resumo das mudanças, módulos impactados
   - CI/CD roda automaticamente
         ↓
-CI/CD passa?
-  ┌─ Sim → Humano revisa PR
-  └─ Não → Claude corrige, commita, push
-        ↓
 Humano revisa PR:
-  ┌─ Aprovado → ✅ G3 → Merge para dev
-  └─ Mudanças solicitadas → Claude ajusta, commita, push
-```
-
-### Fase 6 — Release (requer G4)
-
-```
-Humano decide agrupar cards para release
-        ↓
-Claude prepara:
-  - Merge dev → main
-  - Tag semver: v<major>.<minor>.<patch>
-  - Changelog com cards incluídos
-        ↓
-Humano aprova → ✅ G4 → Claude executa
+  ┌─ Aprovado → ✅ G3 → Merge para main → CI/CD deploya
+  └─ Mudanças solicitadas → Claude ajusta em dev
 ```
 
 ---
@@ -161,7 +144,6 @@ Humano aprova → ✅ G4 → Claude executa
 - Testes apenas nos módulos que o card toca
 - Todo endpoint novo: teste unitário + integração
 - Todo componente com lógica: teste unitário
-- Testes cross-stack apenas quando o card exige interação entre frentes
 - Todos os testes devem passar antes do push
 
 ---
@@ -183,17 +165,16 @@ No início de cada sessão Claude Code, o CLAUDE.md é lido automaticamente. Par
 - Propor user stories com critérios de aceite
 - Criar cards no ClickUp (após G1)
 - Implementar código limpo e testado
-- Manter commits semânticos e branches organizadas
+- Manter commits semânticos
 - Abrir PRs descritivos
 - Corrigir falhas de CI/CD
 - Sinalizar mudanças de escopo ou ciclos excessivos de ajuste
 
 ### Humano:
 - Fornecer contexto no início de cada sessão
-- Aprovar gates (G1, G2, G3, G4)
+- Aprovar gates (G1, G2, G3)
 - Testar manualmente as entregas
 - Descrever problemas com clareza
-- Decidir agrupamento de releases
 - Manter integrações (ClickUp API, Git remote) funcionando
 
 ---
@@ -202,12 +183,11 @@ No início de cada sessão Claude Code, o CLAUDE.md é lido automaticamente. Par
 
 | Comando | Ação |
 |---------|------|
-| `iniciar <card_id>` | Claude cria branch e inicia implementação |
+| `iniciar <card_id>` | Claude inicia implementação em dev |
 | `status` | Claude reporta estado atual do card |
 | `testar` | Claude entrega para teste humano |
 | `ajustar: <descrição>` | Claude faz ajuste específico |
-| `pr` | Claude abre PR |
-| `release <versão>` | Claude prepara release |
+| `pr` | Claude abre PR dev → main |
 | `novo card` | Inicia fluxo de definição de user story |
 
 ---
@@ -221,6 +201,8 @@ MAJOR → mudança incompatível na API ou funcionalidade
 MINOR → nova funcionalidade retrocompatível
 PATCH → correção de bug
 ```
+
+Tags criadas manualmente ao fazer PR de release dev → main.
 
 ---
 
