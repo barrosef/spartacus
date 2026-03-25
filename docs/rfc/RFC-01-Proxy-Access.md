@@ -1,4 +1,4 @@
-# ADR-04 — Proxy Access: Responsável Navegando Como Aluno
+# RFC-01 — Proxy Access: Responsável Navegando Como Aluno
 
 **Data:** 2026-02-24
 **Status:** Aceito

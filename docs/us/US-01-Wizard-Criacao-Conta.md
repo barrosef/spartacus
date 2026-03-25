@@ -3,7 +3,7 @@
 **Status:** Proposta
 **Data:** 2026-03-02
 **Módulos:** `app`, `backend`
-**Complementa:** ADR-02 (Wizards), ADR-04 (Proxy Access), ADR-07 (Escopo MVP), ADR-10 (Segurança), ADR-13 (Multi-tenancy), ADR-14 (UI/UX)
+**Complementa:** ADR-02 (Wizards), RFC-01 (Proxy Access), RFC-04 (Escopo MVP), ADR-10 (Segurança), ADR-13 (Multi-tenancy), ADR-14 (UI/UX)
 
 ---
 

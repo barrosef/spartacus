@@ -1,4 +1,4 @@
-# ADR-05 — Calendário como Domínio Transversal
+# RFC-02 — Calendário como Domínio Transversal
 
 **Data:** 2026-02-24
 **Status:** Aceito

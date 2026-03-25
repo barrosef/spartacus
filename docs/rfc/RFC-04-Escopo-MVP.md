@@ -1,4 +1,4 @@
-# ADR-07 — Escopo do MVP
+# RFC-04 — Escopo do MVP
 
 **Data:** 2026-02-24
 **Status:** Aceito
@@ -28,7 +28,7 @@ O MVP contém apenas o que é **necessário para operar o projeto social no mês
 
 | Domínio | Justificativa |
 |---|---|
-| 🔐 Auth & Sessão (com Proxy Access) | Pré-requisito de tudo. Inclui Proxy Access para responsáveis de menores (ADR-04). |
+| 🔐 Auth & Sessão (com Proxy Access) | Pré-requisito de tudo. Inclui Proxy Access para responsáveis de menores (RFC-01). |
 | 👥 Alunos & Responsáveis | Cadastro, aprovação pela assistente, vínculos responsável ↔ aluno. |
 | 🥋 Turmas & Modalidades | Gestão de turmas é a operação central do projeto. |
 | 📍 Presença (QR único por aula) | Controle de frequência é requisito operacional imediato. |
@@ -41,9 +41,9 @@ O MVP contém apenas o que é **necessário para operar o projeto social no mês
 
 | Domínio | Status | Critério de Exclusão |
 |---|---|---|
-| 📢 Mural & Comunicados | V2 | WhatsApp cumpre a função no mês 1. Sem urgência operacional. (ver ADR-06) |
+| 📢 Mural & Comunicados | V2 | WhatsApp cumpre a função no mês 1. Sem urgência operacional. (ver RFC-03) |
 | 📊 Dashboards & Inteligência | V2 | Dados existem no MVP; camada de inteligência não é prioridade no lançamento. |
-| Integração Google Calendar | V2 | Visualização interna suficiente para o MVP. (ver ADR-05) |
+| Integração Google Calendar | V2 | Visualização interna suficiente para o MVP. (ver RFC-02) |
 
 ---
 
@@ -51,11 +51,11 @@ O MVP contém apenas o que é **necessário para operar o projeto social no mês
 
 ### Modelo de Dados no MVP
 
-Os dados são registrados corretamente desde o início — incluindo campos como `actingAs` em presenças (ADR-04) — mesmo que a camada de inteligência para analisá-los seja V2. Isso evita migração de dados no futuro.
+Os dados são registrados corretamente desde o início — incluindo campos como `actingAs` em presenças (RFC-01) — mesmo que a camada de inteligência para analisá-los seja V2. Isso evita migração de dados no futuro.
 
 ### Calendário no MVP
 
-Visualização interna (dia/semana/mês) exibindo aulas das turmas cadastradas. Sem drag & drop ou edição direta pelo calendário (questão em aberto no ADR-05).
+Visualização interna (dia/semana/mês) exibindo aulas das turmas cadastradas. Sem drag & drop ou edição direta pelo calendário (questão em aberto no RFC-02).
 
 ### Mural no MVP
 

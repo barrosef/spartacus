@@ -1,4 +1,4 @@
-# ADR-06 — Mural de Comunicados: Redefinição do Domínio Social
+# RFC-03 — Mural de Comunicados: Redefinição do Domínio Social
 
 **Data:** 2026-02-24
 **Status:** Aceito

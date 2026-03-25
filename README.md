@@ -77,7 +77,7 @@ Uma conta pode exercer **múltiplas personas simultaneamente** (ex: professor + 
 * **Proxy Access:** pode navegar no app "como o filho" — realiza check-in, visualiza turmas e presença em nome do dependente
 * Gerencia dados do dependente
 * Em modo proxy, todas as ações são registradas com dupla autoria: `userId` (responsável) + `actingAs` (aluno)
-* Ver ADR-04
+* Ver RFC-01
 
 ## Professor
 
@@ -133,7 +133,7 @@ Cada turma contém:
 
 ## Calendário & Agenda
 
-Domínio transversal — exibe eventos de todos os domínios (aulas, eventos gerais). Ver ADR-05.
+Domínio transversal — exibe eventos de todos os domínios (aulas, eventos gerais). Ver RFC-02.
 
 Visualização:
 
@@ -142,7 +142,7 @@ Visualização:
 * Mês
 
 MVP: somente leitura (exibe aulas já agendadas pelas turmas).
-Questão em aberto (ADR-05): Calendário como somente leitura ou fonte de verdade?
+Questão em aberto (RFC-02): Calendário como somente leitura ou fonte de verdade?
 
 ---
 
@@ -205,7 +205,7 @@ Canal de comunicação oficial do staff para alunos e responsáveis.
 * Curtidas (reação passiva)
 * Compartilhamento externo
 
-> **V2:** no MVP, a comunicação ocorre por canais externos existentes (WhatsApp, etc.). Ver ADR-06.
+> **V2:** no MVP, a comunicação ocorre por canais externos existentes (WhatsApp, etc.). Ver RFC-03.
 
 ---
 
@@ -296,7 +296,7 @@ Controle antifraude baseado em:
 
 | Domínio | Descrição |
 |---|---|
-| 🔐 Auth & Sessão | Firebase Auth + Proxy Access (ADR-04) |
+| 🔐 Auth & Sessão | Firebase Auth + Proxy Access (RFC-01) |
 | 👥 Alunos & Responsáveis | Cadastro, aprovação, vínculos |
 | 🥋 Turmas & Modalidades | Gestão de turmas e modalidades |
 | 📍 Presença | QR único por aula |
@@ -307,11 +307,11 @@ Controle antifraude baseado em:
 
 | Domínio | Status | ADR |
 |---|---|---|
-| 📢 Mural & Comunicados | V2 | ADR-06 |
+| 📢 Mural & Comunicados | V2 | RFC-03 |
 | 📊 Dashboards & Inteligência | V2 | — |
-| Integração Google Calendar | V2 | ADR-05 |
+| Integração Google Calendar | V2 | RFC-02 |
 
-Ver ADR-07 para critérios de corte.
+Ver RFC-04 para critérios de corte.
 
 ---
 
