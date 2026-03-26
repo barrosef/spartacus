@@ -1,9 +1,61 @@
 # ADR-14 — Padrões de UI/UX para Construção de Telas
 
 **Status:** Aceito
-**Data:** 2026-03-02
+**Data:** 2026-03-02 (atualizado 2026-03-25)
 **Contexto:** Plataforma Spartacus — backoffice (React/Vite) e app mobile (React Native/Expo)
 **Complementa:** ADR-01 (Identidade Visual), ADR-02 (Navegação e Wizards)
+
+---
+
+## 0. Filosofia de Design — Task-Oriented Design
+
+> **A plataforma conduz. O usuário segue.**
+
+A plataforma Spartacus atende um público majoritariamente leigo em tecnologia — professores de artes marciais, responsáveis de crianças, apoiadores da comunidade no interior do Mato Grosso. A experiência não pode exigir conhecimento prévio de sistemas digitais.
+
+Adotamos **Task-Oriented Design** como princípio arquitetural de todas as interfaces. Cada tela é organizada por "o que o usuário quer fazer", não por "que entidade do banco ele está editando".
+
+### 0.1 Princípios obrigatórios
+
+| # | Princípio | Descrição |
+|---|-----------|-----------|
+| 1 | **Guided Experience (GX)** | Cada interação é um fluxo com início, meio e fim. O sistema sabe o que vem a seguir e leva o usuário até lá. Wizards são o padrão, não a exceção. |
+| 2 | **Progressive Disclosure** | Campos, ações e informações aparecem apenas quando são relevantes no contexto atual. |
+| 3 | **Single-Purpose Screens** | Cada tela faz uma coisa e faz bem. Sem abas, sem painéis laterais empilhados, sem sobrecarga. |
+| 4 | **Opinionated Design** | O sistema toma decisões pelo usuário. Em vez de 5 opções, apresenta a melhor e permite ajustar se necessário. |
+| 5 | **Zero Cognitive Load** | O usuário não precisa pensar, interpretar labels técnicas ou decidir entre opções ambíguas. |
+| 6 | **Contextual Actions** | Ações aparecem onde e quando fazem sentido — no card, no item, no momento certo. |
+
+### 0.2 Anti-padrões proibidos
+
+| Proibido | Por quê | Alternativa |
+|----------|---------|-------------|
+| Listagem → Detalhe → Edição com abas | Burocrático, centrado em entidades | Fluxo guiado por tarefa |
+| Menus com dezenas de itens | Sobrecarga cognitiva | Navegação contextual, máximo 5-6 itens |
+| Formulários com 20+ campos | Alta taxa de abandono | Wizard com 3-5 campos por step |
+| Dashboards lotados de gráficos | Falsa sensação de utilidade | Cards contextuais com a informação que importa agora |
+| Modais dentro de modais | Confuso, perde contexto | Tela dedicada ou inline |
+| Botões genéricos (Salvar/Cancelar) | Não comunicam consequência | Ações descritivas ("Enviar para aprovação", "Confirmar presença") |
+| Tabelas com 10+ colunas | Ilegível, burocrático | Cards com informações hierárquicas |
+
+### 0.3 Padrões visuais de referência
+
+- **Wizards** para qualquer fluxo com mais de 3 campos
+- **Cards** em vez de linhas de tabela
+- **Check circles arredondados** em vez de checkboxes nativos
+- **Feedback inline** (validação, loading, sucesso) em vez de alerts/toasts genéricos
+- **Ações no contexto** (dentro do card) em vez de barra de ações global
+- **Chips/badges** para estados e categorias
+- **Empty states** com orientação ("Nenhuma turma ainda. A equipe vai orientar após aprovação.")
+
+### 0.4 Regra de ouro para novas telas
+
+Antes de implementar qualquer tela, responder:
+
+1. **Qual tarefa o usuário quer completar?** (não "qual entidade ele vai editar")
+2. **Quantos passos mínimos precisa?** (se > 3, usar wizard)
+3. **O que pode ser decidido pelo sistema?** (auto-preencher, auto-selecionar, ocultar o irrelevante)
+4. **Um usuário de 60 anos sem experiência digital conseguiria completar sem ajuda?**
 
 ---
 
@@ -197,14 +249,24 @@ Modalidade
   ℹ Selecionado automaticamente (única opção)
 ```
 
-### 6.3 Select em wizard
+### 6.3 Regra global: auto-seleção de opção única
 
-Quando uma etapa de wizard possui apenas um select/radio e há somente uma opção:
+> **Sempre que um campo de seleção obrigatório tiver uma única opção disponível, o sistema seleciona essa opção automaticamente.**
 
+Esta regra se aplica a **todos** os componentes de seleção: selects, radios, cards de seleção, steps de wizard, e qualquer outro componente onde o usuário escolhe entre opções.
+
+**Em wizard:** quando um step inteiro existe apenas para selecionar entre opções e há somente uma opção:
+1. A opção é **auto-selecionada**
+2. O wizard **avança automaticamente** para o próximo step (sem exigir clique)
+3. O usuário percebe apenas um breve delay de transição — sem interrupção
+
+**Em formulários (não-wizard):**
 1. A opção é **auto-selecionada** com indicação visual clara
-2. O botão "Continuar" fica **habilitado** (a seleção já foi feita automaticamente)
-3. Uma nota discreta informa: *"Apenas uma opção disponível no momento."*
-4. Se o campo for opcional, o botão `✕` permite desmarcar antes de avançar
+2. O botão "Continuar" fica **habilitado**
+3. Uma nota discreta informa: *"Selecionado automaticamente — única opção disponível."*
+4. Se o campo for opcional, o botão `✕` permite desmarcar
+
+**Justificativa:** perguntar ao usuário algo que tem apenas uma resposta possível viola o princípio de Zero Cognitive Load. O sistema deve decidir o óbvio.
 
 ---
 
