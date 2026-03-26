@@ -133,7 +133,7 @@ Fluxo de loop:
     * Data de nascimento
     * Gênero
     * Telefone: pré-preencher do responsável (editável)
-    * Email: **opcional para menores** — se preenchido, validar unicidade. Login do menor é controlado pelo responsável via Proxy Access (ADR-04).
+    * Email: **opcional para menores** — se preenchido, validar unicidade. Login do menor é controlado pelo responsável via Proxy Access (RFC-01).
 
 * “Concluir menores” → segue.
 
@@ -241,7 +241,7 @@ UI:
 
 ### 11) Fluxo de Proxy Access no App (adicionado em 2026-02-24)
 
-> Complementa ADR-04. Esta seção descreve como o Proxy Access se manifesta na navegação do app.
+> Complementa RFC-01. Esta seção descreve como o Proxy Access se manifesta na navegação do app.
 
 #### Entrada no modo proxy
 
@@ -270,6 +270,6 @@ O indicador é sempre visível durante a sessão proxy — não pode ser dispens
 
 #### O que o responsável vê em modo proxy
 
-Tudo que o aluno veria: perfil, turmas, agenda, histórico de presença, doações. O escopo é total — ver ADR-04 para justificativa de segurança.
+Tudo que o aluno veria: perfil, turmas, agenda, histórico de presença, doações. O escopo é total — ver RFC-01 para justificativa de segurança.
 
 --

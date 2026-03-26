@@ -287,7 +287,7 @@ app_publish() {
   echo -e "  Acesse: https://play.google.com/console"
 }
 
-app_deploy() {
+_adb_check() {
   if ! command -v adb &>/dev/null; then
     echo -e "${RED}adb nao encontrado. Instale o Android SDK Platform-Tools.${NC}"
     exit 1
@@ -296,6 +296,24 @@ app_deploy() {
     echo -e "${RED}Nenhum dispositivo Android conectado. Verifique USB e depuracao USB.${NC}"
     exit 1
   fi
+}
+
+_adb_install_apk() {
+  local apk="$1"
+  echo -e "${CYAN}Desinstalando versao anterior...${NC}"
+  adb uninstall br.com.spartacus.app 2>/dev/null || true
+
+  echo -e "${CYAN}Instalando $apk no dispositivo...${NC}"
+  adb install "$apk"
+  echo -e "${GREEN}APK instalado com sucesso.${NC}"
+
+  echo -e "${CYAN}Abrindo app...${NC}"
+  adb shell am start -n br.com.spartacus.app/.MainActivity
+  echo -e "${GREEN}App iniciado no dispositivo.${NC}"
+}
+
+app_deploy() {
+  _adb_check
 
   echo -e "${CYAN}Build APK (preview)...${NC}"
   cd "$APP_DIR"
@@ -308,24 +326,11 @@ app_deploy() {
     exit 1
   fi
 
-  echo -e "${CYAN}Instalando $apk no dispositivo...${NC}"
-  adb install -r "$apk"
-  echo -e "${GREEN}APK instalado com sucesso.${NC}"
-
-  echo -e "${CYAN}Abrindo app...${NC}"
-  adb shell am start -n br.com.spartacus.app/.MainActivity
-  echo -e "${GREEN}App iniciado no dispositivo.${NC}"
+  _adb_install_apk "$apk"
 }
 
 app_install() {
-  if ! command -v adb &>/dev/null; then
-    echo -e "${RED}adb nao encontrado. Instale o Android SDK Platform-Tools.${NC}"
-    exit 1
-  fi
-  if ! adb devices 2>/dev/null | grep -q "device$"; then
-    echo -e "${RED}Nenhum dispositivo Android conectado.${NC}"
-    exit 1
-  fi
+  _adb_check
 
   local apk
   apk=$(ls -t "$APP_DIR"/build-*.apk 2>/dev/null | head -1)
@@ -334,13 +339,7 @@ app_install() {
     exit 1
   fi
 
-  echo -e "${CYAN}Instalando $apk no dispositivo...${NC}"
-  adb install -r "$apk"
-  echo -e "${GREEN}APK instalado com sucesso.${NC}"
-
-  echo -e "${CYAN}Abrindo app...${NC}"
-  adb shell am start -n br.com.spartacus.app/.MainActivity
-  echo -e "${GREEN}App iniciado no dispositivo.${NC}"
+  _adb_install_apk "$apk"
 }
 
 app_devlog() {
