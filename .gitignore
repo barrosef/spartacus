@@ -21,3 +21,14 @@ Thumbs.db
 # Arquivos de contexto/referência local
 docs/context/
 docs/images/
+
+# Venv playwriht
+playwright-venv/
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

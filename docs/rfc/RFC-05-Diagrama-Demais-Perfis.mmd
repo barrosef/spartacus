@@ -1,0 +1,32 @@
+%% RFC-05 — Máquina de Estados de Contas
+%% Diagrama: Demais Perfis (owner, assistant, teacher, instructor, supporter, sponsor)
+%% 6 estados — sem anamnese
+
+stateDiagram-v2
+    direction TB
+
+    [*] --> WEC : Cadastro por email
+    [*] --> PA : Cadastro via Google
+
+    WEC --> PA : Clique no link (sistema)
+
+    PA --> APR : Aprovado pelo time
+    PA --> WRR : Time solicita revisao
+
+    APR --> WRR : Time solicita revisao
+    APR --> ARC : Arquivado
+
+    ARC --> WRR : Time solicita revisao
+    ARC --> APR : Reativado
+
+    WRR --> RR : Usuario revisou cadastro
+
+    RR --> WRR : Time solicita nova revisao
+    RR --> APR : Aprovado pelo time
+
+    WEC : waiting_email_confirmation
+    PA : pending_approval
+    APR : approved
+    ARC : archived
+    WRR : waiting_registration_review
+    RR : revised_registration
