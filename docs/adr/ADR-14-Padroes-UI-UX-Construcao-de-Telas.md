@@ -390,7 +390,37 @@ Todo formulário entregue deve passar por:
 
 ---
 
-## 12. Referências
+## 12. Telas de Sucesso / Feedback (RFC-08)
+
+### 12.1 Padrão obrigatório
+
+Toda confirmação de ação bem-sucedida deve usar o componente `SuccessScreen` (tela full-screen dedicada). **Nunca usar** `Alert.alert`, popups, toasts ou modals para feedback de sucesso.
+
+### 12.2 Layout
+
+Tela centralizada com:
+- Ícone: círculo 80px com borda colorida, ícone Feather dentro (28px), glow sutil
+- Título: `fontHeadingSemi`, 22px, `foreground`, centralizado
+- Mensagem (opcional): `fontBody`, 14px, `mutedForeground`, centralizado, max 3 linhas
+- Fundo: `background` (tela inteira, sem header)
+
+### 12.3 Variantes
+
+| Variante | Ícone | Cor | Glow | Auto-dismiss |
+|---|---|---|---|---|
+| `success` | check | `#4CAF50` | `rgba(76,175,80,0.15)` | 2s → volta |
+| `warning` | alert-triangle | `#F59E0B` | `rgba(245,158,11,0.15)` | Não |
+| `error` | x | `#EF4444` | `rgba(239,68,68,0.15)` | Não |
+
+### 12.4 Comportamento
+
+- **Success:** auto-dismiss após 2 segundos, sem botões
+- **Warning/Error:** permanece até o usuário navegar (back/tab)
+- Referência visual: `docs/images/prototype/03-checkin-success.png`, `docs/images/prototype/12-doacao-sucesso.png`
+
+---
+
+## 13. Referências
 
 - [NN/G — Placeholders in Form Fields Are Harmful](https://www.nngroup.com/articles/form-design-placeholders/)
 - [NN/G — Required Fields](https://www.nngroup.com/articles/required-fields/)
