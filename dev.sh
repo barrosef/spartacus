@@ -21,6 +21,7 @@
 #   deploy     Build APK + instala no Android via USB (app only)
 #   devlog     Mostra logs do app Android no console (app only)
 #   publish    Build AAB + publica na Play Store internal track (app only)
+#   web        Build PWA + deploy no Firebase Hosting (app only)
 #
 # Exemplos:
 #   ./dev.sh                  # sobe tudo
@@ -364,6 +365,39 @@ app_logs() {
   tail -f /tmp/spartacus-app.log
 }
 
+app_web() {
+  echo -e "${CYAN}Build PWA (Expo Web)...${NC}"
+  cd "$APP_DIR"
+
+  # Ensure API URL points to production
+  local env_file="$APP_DIR/.env"
+  local api_url
+  api_url=$(grep "^EXPO_PUBLIC_API_URL=" "$env_file" | tail -1 | cut -d= -f2-)
+  if echo "$api_url" | grep -q "localhost\|192\.168"; then
+    echo -e "${GOLD}ATENÇÃO: EXPO_PUBLIC_API_URL aponta para ambiente local.${NC}"
+    echo -e "${GOLD}Para produção, ajuste para a URL do Cloud Run antes do build.${NC}"
+    read -r -p "Continuar mesmo assim? [y/N] " confirm
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+      echo -e "${RED}Build cancelado.${NC}"
+      return
+    fi
+  fi
+
+  echo -e "  Executando: npx expo export --platform web"
+  npx expo export --platform web
+  echo -e "  ${GREEN}Build concluído → dist/${NC}"
+  echo ""
+
+  echo -e "${CYAN}Deploy para Firebase Hosting (app PWA)...${NC}"
+  echo -e "  Site: spartacus-artes-marciais-app"
+  echo -e "  URL:  https://spartacus-artes-marciais-app.web.app"
+  echo ""
+  firebase deploy --only hosting:app --project spartacus-artes-marciais
+  echo ""
+  echo -e "${GREEN}PWA publicado com sucesso!${NC}"
+  echo -e "  https://spartacus-artes-marciais-app.web.app"
+}
+
 # ─── Backoffice ──────────────────────────────────────────────────────────────
 
 is_backoffice_running() {
@@ -478,6 +512,7 @@ usage() {
   echo "  ./dev.sh app deploy           # build + instala no celular via USB"
   echo "  ./dev.sh app devlog           # logs JS do celular em tempo real"
   echo "  ./dev.sh app publish          # build AAB + publica na Play Store"
+  echo "  ./dev.sh app web             # build PWA + deploy Firebase Hosting"
   echo "  ./dev.sh backoffice           # sobe backoffice dev server"
   echo "  ./dev.sh backoffice logs      # logs do backoffice"
   echo "  ./dev.sh stop                 # para tudo"
@@ -519,6 +554,7 @@ case "$SERVICE" in
       install) app_install ;;
       devlog)  app_devlog ;;
       publish) app_publish ;;
+      web)     app_web ;;
       *)       usage; exit 1 ;;
     esac
     ;;
