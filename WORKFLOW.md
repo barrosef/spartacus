@@ -1,6 +1,6 @@
 # WORKFLOW.md — Contrato de Desenvolvimento Humano & Claude
 
-**Última atualização:** 18 de março de 2026
+**Última atualização:** 30 de março de 2026
 
 ---
 
@@ -47,16 +47,16 @@ Humano descreve necessidade
         ↓
 Claude colhe requisitos, questiona, identifica fraquezas
         ↓
-Claude propõe User Story:
-  - Título
-  - Descrição
+Claude propõe RFC (docs/rfc/RFC-NN-Titulo.md):
+  - Contexto e problema
+  - Decisão proposta
   - Critérios de aceite (checklists testáveis)
   - Módulos impactados: [backend] [backoffice] [app]  ← obrigatório
-  - Estimativa de complexidade: [baixa | média | alta]
+  - Consequências (positivas e negativas)
         ↓
 Humano aprova / ajusta → ✅ G1
         ↓
-Claude cria card no ClickUp via API
+RFC commitado em dev com status "Aceito"
 ```
 
 **Módulos válidos:**
@@ -141,7 +141,7 @@ Humano revisa PR:
 | App (React Native) | Componentes, hooks, utils | Fluxos de usuário | Jest + RNTL |
 
 **Regras:**
-- Testes apenas nos módulos que o card toca
+- Testes apenas nos módulos que a RFC toca
 - Todo endpoint novo: teste unitário + integração
 - Todo componente com lógica: teste unitário
 - Todos os testes devem passar antes do push
@@ -150,9 +150,9 @@ Humano revisa PR:
 
 ## 4. Re-contextualização entre Sessões
 
-No início de cada sessão Claude Code, o CLAUDE.md é lido automaticamente. Para contexto de card em andamento, Humano fornece:
+No início de cada sessão Claude Code, o CLAUDE.md é lido automaticamente. Para contexto de trabalho em andamento, Humano fornece:
 
-1. Card/user story em andamento (ID + título)
+1. RFC em andamento (número + título)
 2. Fase atual (implementação, ajuste, PR, etc.)
 3. Último estado conhecido (o que foi feito, o que falta)
 
@@ -162,8 +162,7 @@ No início de cada sessão Claude Code, o CLAUDE.md é lido automaticamente. Par
 
 ### Claude:
 - Questionar requisitos vagos e identificar fraquezas nas estratégias
-- Propor user stories com critérios de aceite
-- Criar cards no ClickUp (após G1)
+- Propor RFCs com contexto, decisão e critérios de aceite
 - Implementar código limpo e testado
 - Manter commits semânticos
 - Abrir PRs descritivos
@@ -175,7 +174,7 @@ No início de cada sessão Claude Code, o CLAUDE.md é lido automaticamente. Par
 - Aprovar gates (G1, G2, G3)
 - Testar manualmente as entregas
 - Descrever problemas com clareza
-- Manter integrações (ClickUp API, Git remote) funcionando
+- Manter integrações (Git remote) funcionando
 
 ---
 
@@ -183,12 +182,12 @@ No início de cada sessão Claude Code, o CLAUDE.md é lido automaticamente. Par
 
 | Comando | Ação |
 |---------|------|
-| `iniciar <card_id>` | Claude inicia implementação em dev |
-| `status` | Claude reporta estado atual do card |
+| `iniciar <RFC-NN>` | Claude inicia implementação em dev |
+| `status` | Claude reporta estado atual da RFC em andamento |
 | `testar` | Claude entrega para teste humano |
 | `ajustar: <descrição>` | Claude faz ajuste específico |
 | `pr` | Claude abre PR dev → main |
-| `novo card` | Inicia fluxo de definição de user story |
+| `nova rfc` | Inicia fluxo de definição de RFC |
 
 ---
 

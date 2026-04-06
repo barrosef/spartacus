@@ -1,0 +1,48 @@
+%% RFC-05 — Máquina de Estados de Contas
+%% Diagrama: Alunos e Responsáveis (student, guardian)
+%% 10 estados — inclui fluxo de anamnese
+
+stateDiagram-v2
+    direction TB
+
+    [*] --> WEC : Cadastro por email
+    [*] --> PA : Cadastro via Google
+
+    WEC --> PA : Clique no link (sistema)
+
+    PA --> WMH : Aprovado pelo time
+    PA --> WRR : Time solicita revisao
+    PA --> REJ : Rejeitado pelo time
+
+    WMH --> PMHA : Anamnese preenchida
+    WMH --> WRR : Time solicita revisao
+
+    PMHA --> APR : Anamnese aprovada
+    PMHA --> WRR : Time solicita revisao
+
+    APR --> WRR : Time solicita revisao
+    APR --> EXP : Expulso
+    APR --> ARC : Arquivado
+
+    EXP --> WRR : Time solicita revisao
+    ARC --> WRR : Time solicita revisao
+    ARC --> APR : Reativado
+
+    REJ --> WRR : Time solicita revisao
+
+    WRR --> RR : Usuario revisou cadastro
+
+    RR --> WRR : Time solicita nova revisao
+    RR --> WMH : Encaminhado para anamnese
+    RR --> APR : Aprovado pelo time
+
+    WEC : waiting_email_confirmation
+    PA : pending_approval
+    WMH : waiting_medical_history
+    PMHA : pending_medical_history_approval
+    APR : approved
+    REJ : rejected
+    EXP : expelled
+    ARC : archived
+    WRR : waiting_registration_review
+    RR : revised_registration
