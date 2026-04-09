@@ -143,6 +143,50 @@ emulator_status() {
   fi
 }
 
+# ─── Orchestrator (local event processor) ─────────────────────────────────────
+
+is_orchestrator_running() {
+  [ -f /tmp/spartacus-orchestrator.pid ] && kill -0 "$(cat /tmp/spartacus-orchestrator.pid)" 2>/dev/null
+}
+
+orchestrator_start() {
+  if is_orchestrator_running; then
+    echo -e "  ${GREEN}●${NC} Orchestrator ja esta rodando"
+    return
+  fi
+  echo -e "${CYAN}Local Event Orchestrator...${NC}"
+  cd "$BACKEND_DIR"
+  OPENSSL_CONF="" uv run python scripts/local_orchestrator.py \
+    > /tmp/spartacus-orchestrator.log 2>&1 &
+  echo $! > /tmp/spartacus-orchestrator.pid
+  echo -e "  ${GREEN}●${NC} Orchestrator  (polling events collection)"
+  echo -e "    Logs: ./dev.sh orchestrator logs"
+}
+
+orchestrator_stop() {
+  if [ -f /tmp/spartacus-orchestrator.pid ]; then
+    kill "$(cat /tmp/spartacus-orchestrator.pid)" 2>/dev/null || true
+    rm -f /tmp/spartacus-orchestrator.pid
+  fi
+  echo -e "  ${RED}●${NC} Orchestrator parado"
+}
+
+orchestrator_status() {
+  if is_orchestrator_running; then
+    echo -e "  ${GREEN}●${NC} Orchestrator  (running)"
+  else
+    echo -e "  ${RED}●${NC} Orchestrator  (parado)"
+  fi
+}
+
+orchestrator_logs() {
+  if [ ! -f /tmp/spartacus-orchestrator.log ]; then
+    echo -e "${RED}Sem arquivo de log. Orchestrator foi iniciado?${NC}"
+    exit 1
+  fi
+  tail -f /tmp/spartacus-orchestrator.log
+}
+
 # ─── Backend ──────────────────────────────────────────────────────────────────
 
 backend_start() {
@@ -529,6 +573,8 @@ all_start() {
   backend_start
   sleep 2
   echo ""
+  orchestrator_start
+  echo ""
   app_start "$@"
   echo ""
   webapp_start
@@ -552,6 +598,7 @@ all_stop() {
   backoffice_stop
   webapp_stop
   app_stop
+  orchestrator_stop
   backend_stop
   emulator_stop
   echo -e "\n${GREEN}Tudo parado.${NC}"
@@ -562,6 +609,7 @@ all_status() {
   echo ""
   emulator_status
   backend_status
+  orchestrator_status
   app_status
   webapp_status
   backoffice_status
@@ -573,7 +621,7 @@ all_status() {
 usage() {
   echo "Uso: ./dev.sh [servico] <acao>"
   echo ""
-  echo "Servicos: emulator, backend, app, webapp, backoffice (ou nenhum para todos)"
+  echo "Servicos: emulator, backend, orchestrator, app, webapp, backoffice (ou nenhum para todos)"
   echo "Acoes:    start, stop, status, logs, build, deploy, devlog"
   echo ""
   echo "Exemplos:"
@@ -608,6 +656,15 @@ case "$SERVICE" in
       stop)   emulator_stop ;;
       status) emulator_status ;;
       logs)   echo -e "${GOLD}Emulators logs via docker:${NC}"; cd "$BACKEND_DIR" && docker compose logs -f ;;
+      *)      usage; exit 1 ;;
+    esac
+    ;;
+  orchestrator)
+    case "$ACTION" in
+      start)  orchestrator_start ;;
+      stop)   orchestrator_stop ;;
+      status) orchestrator_status ;;
+      logs)   orchestrator_logs ;;
       *)      usage; exit 1 ;;
     esac
     ;;
