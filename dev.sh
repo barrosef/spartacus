@@ -416,7 +416,7 @@ webapp_start() {
   echo -e "${CYAN}Webapp (Expo Web)...${NC}"
   cd "$APP_DIR"
 
-  # Swap API URL to local backend for the dev session
+  # Swap API URL to local backend and enable emulators for the dev session
   local env_file="$APP_DIR/.env"
   local current_url
   current_url=$(grep "^EXPO_PUBLIC_API_URL=" "$env_file" | tail -1 | cut -d= -f2-)
@@ -424,8 +424,18 @@ webapp_start() {
     echo -e "  ${GOLD}Trocando EXPO_PUBLIC_API_URL para http://localhost:8000${NC}"
     sed -i "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://localhost:8000|" "$env_file"
   fi
+  # Enable Firebase Auth emulator
+  if ! grep -q "^EXPO_PUBLIC_USE_EMULATORS=true" "$env_file"; then
+    echo -e "  ${GOLD}Habilitando Firebase Auth Emulator (localhost:9099)${NC}"
+    sed -i "s|^#\s*EXPO_PUBLIC_USE_EMULATORS=.*|EXPO_PUBLIC_USE_EMULATORS=true|" "$env_file"
+    if ! grep -q "^EXPO_PUBLIC_USE_EMULATORS=true" "$env_file"; then
+      echo "EXPO_PUBLIC_USE_EMULATORS=true" >> "$env_file"
+    fi
+  fi
 
-  EXPO_PUBLIC_API_URL=http://localhost:8000 npx expo start --web --port 8081 \
+  EXPO_PUBLIC_API_URL=http://localhost:8000 \
+  EXPO_PUBLIC_USE_EMULATORS=true \
+  npx expo start --web --port 8081 \
     > /tmp/spartacus-webapp.log 2>&1 &
   echo $! > /tmp/spartacus-webapp.pid
   echo -e "  ${GREEN}●${NC} Webapp        http://localhost:8081"
