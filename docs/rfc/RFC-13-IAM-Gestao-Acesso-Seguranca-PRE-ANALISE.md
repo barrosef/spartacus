@@ -43,6 +43,7 @@ A interface é organizada em 4 colunas que se revelam progressivamente com efeit
 | `02-main-window-column-02-popup-atribuir.png` | Modal "Atribuir usuário" com busca e seleção |
 | `02-main-window-column-02-remover-usuario.png` | Hover sobre usuário mostrando botão "Remover do perfil" |
 | `02-main-window-column-03-detalhe-usuario.png` | Col 4: detalhe do usuário (nome, email, nascimento, telefone, perfis) |
+| `02-main-window-column-03-detalhe-usuario-clicando-botao-remover-usuario.png` | Confirmação inline ao clicar X: card fica vermelho com botões Cancelar/Remover |
 
 ---
 
@@ -130,8 +131,14 @@ A interface é organizada em 4 colunas que se revelam progressivamente com efeit
 ### 5.4 Remover usuário do perfil
 1. Mouse hover sobre um card de usuário na col 3
 2. Aparece botão "Remover do perfil" (com ícone X)
-3. Ao clicar, confirma remoção
-4. **Regra**: usuário não pode ficar sem nenhum perfil — bloquear se for o último
+3. Ao clicar no X, o card do usuário **muda para um estado de confirmação inline** (sem modal/popup):
+   - Fundo vermelho/destaque no card
+   - Texto de confirmação: "Remover {nome} do perfil {perfil}?"
+   - Dois botões inline: **Cancelar** / **Remover**
+4. Ao confirmar, o role é removido e o card desaparece da lista
+5. Ao cancelar, o card volta ao estado normal
+6. **Regra**: usuário não pode ficar sem nenhum perfil — bloquear se for o último
+7. **Protótipo**: `02-main-window-column-03-detalhe-usuario-clicando-botao-remover-usuario.png`
 
 ### 5.5 Ver detalhe de um usuário
 1. Clica em um card de usuário na col 3
@@ -228,10 +235,8 @@ Pelo protótipo parece ser **(c)** — a lista mostra role badges existentes em 
 
 ### 🟡 Tema 6 — Remover usuário do perfil
 
-**Q11.** Confirmação antes de remover? O protótipo mostra o botão "Remover do perfil" no hover. Clicar:
-- (a) Remove imediatamente (sem confirm)
-- (b) Abre dialog de confirmação
-- (c) Marca para remoção (workflow)
+**Q11.** ~~Confirmação antes de remover?~~ **RESPONDIDO pelo protótipo** (`02-...-clicando-botao-remover-usuario.png`):
+Ao clicar no X, o card do usuário transforma-se em uma **confirmação inline** (fundo vermelho, texto "Remover {nome} do perfil {perfil}?", botões Cancelar/Remover). Não é modal, não é dialog — é transformação inline do próprio card. Implementar exatamente assim.
 
 **Q12.** Se o usuário só tem 1 role e é essa que está sendo removida:
 - (a) Bloquear com mensagem "Usuário não pode ficar sem perfil"
