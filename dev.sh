@@ -112,6 +112,16 @@ emulator_start() {
   fi
   echo -e "${CYAN}Firebase Emulators...${NC}"
   cd "$BACKEND_DIR"
+
+  # Ensure emulator-data dir exists (volume mount target)
+  mkdir -p emulator-data
+
+  local has_data="no"
+  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ] || \
+     [ -d "$BACKEND_DIR/emulator-data/auth_export" ]; then
+    has_data="yes"
+  fi
+
   docker compose up -d 2>&1 | tail -3
   echo -n "  Aguardando"
   local retries=30
@@ -127,12 +137,21 @@ emulator_start() {
   echo -e " ${GREEN}OK${NC}"
   echo -e "  ${GREEN}●${NC} Emulators     http://localhost:4000"
   echo -e "    Firestore :8080 | Auth :9099 | Storage :9199"
+  if [ "$has_data" = "yes" ]; then
+    echo -e "    ${GREEN}Dados restaurados de emulator-data/${NC}"
+  else
+    echo -e "    ${GOLD}Sem dados salvos — iniciando do zero${NC}"
+  fi
+  echo -e "    Dados persistidos automaticamente ao parar (--export-on-exit)"
 }
 
 emulator_stop() {
   cd "$BACKEND_DIR"
   docker compose down 2>/dev/null
   echo -e "  ${RED}●${NC} Emulators parado"
+  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ]; then
+    echo -e "    ${GREEN}Dados exportados em emulator-data/${NC}"
+  fi
 }
 
 emulator_status() {
@@ -141,6 +160,20 @@ emulator_status() {
   else
     echo -e "  ${RED}●${NC} Emulators     (parado)"
   fi
+  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ]; then
+    local size
+    size=$(du -sh "$BACKEND_DIR/emulator-data" 2>/dev/null | cut -f1)
+    echo -e "    Dados salvos: ${size:-?}"
+  else
+    echo -e "    ${GOLD}Sem dados salvos${NC}"
+  fi
+}
+
+emulator_reset() {
+  echo -e "${GOLD}Apagando todos os dados dos emuladores...${NC}"
+  rm -rf "$BACKEND_DIR/emulator-data"
+  mkdir -p "$BACKEND_DIR/emulator-data"
+  echo -e "  ${GREEN}Dados apagados. Próximo start será do zero.${NC}"
 }
 
 # ─── Orchestrator (local event processor) ─────────────────────────────────────
@@ -656,6 +689,7 @@ case "$SERVICE" in
       stop)   emulator_stop ;;
       status) emulator_status ;;
       logs)   echo -e "${GOLD}Emulators logs via docker:${NC}"; cd "$BACKEND_DIR" && docker compose logs -f ;;
+      reset)  emulator_reset ;;
       *)      usage; exit 1 ;;
     esac
     ;;
