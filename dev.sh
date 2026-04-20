@@ -9,6 +9,7 @@
 #   emulator   Firebase Emulators (Firestore, Auth, Storage)
 #   backend    FastAPI (uvicorn com hot-reload)
 #   app        Expo (Metro bundler)
+#   webapp     Expo Web dev server (app.spartacus.app.br local)
 #   backoffice Vite dev server (React)
 #   (nenhum)   Todos os serviços
 #
@@ -35,6 +36,8 @@
 #   ./dev.sh app deploy       # build + instala APK no celular via USB
 #   ./dev.sh app devlog       # logs JS do app no celular em tempo real
 #   ./dev.sh app publish      # build AAB + publica na Play Store (internal)
+#   ./dev.sh webapp start     # sobe app web local (Expo Web → localhost:8081)
+#   ./dev.sh webapp stop      # para app web local
 #   ./dev.sh backoffice       # sobe backoffice dev server
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -109,6 +112,16 @@ emulator_start() {
   fi
   echo -e "${CYAN}Firebase Emulators...${NC}"
   cd "$BACKEND_DIR"
+
+  # Ensure emulator-data dir exists (volume mount target)
+  mkdir -p emulator-data
+
+  local has_data="no"
+  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ] || \
+     [ -d "$BACKEND_DIR/emulator-data/auth_export" ]; then
+    has_data="yes"
+  fi
+
   docker compose up -d 2>&1 | tail -3
   echo -n "  Aguardando"
   local retries=30
@@ -124,12 +137,21 @@ emulator_start() {
   echo -e " ${GREEN}OK${NC}"
   echo -e "  ${GREEN}●${NC} Emulators     http://localhost:4000"
   echo -e "    Firestore :8080 | Auth :9099 | Storage :9199"
+  if [ "$has_data" = "yes" ]; then
+    echo -e "    ${GREEN}Dados restaurados de emulator-data/${NC}"
+  else
+    echo -e "    ${GOLD}Sem dados salvos — iniciando do zero${NC}"
+  fi
+  echo -e "    Dados persistidos automaticamente ao parar (--export-on-exit)"
 }
 
 emulator_stop() {
   cd "$BACKEND_DIR"
   docker compose down 2>/dev/null
   echo -e "  ${RED}●${NC} Emulators parado"
+  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ]; then
+    echo -e "    ${GREEN}Dados exportados em emulator-data/${NC}"
+  fi
 }
 
 emulator_status() {
@@ -138,6 +160,64 @@ emulator_status() {
   else
     echo -e "  ${RED}●${NC} Emulators     (parado)"
   fi
+  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ]; then
+    local size
+    size=$(du -sh "$BACKEND_DIR/emulator-data" 2>/dev/null | cut -f1)
+    echo -e "    Dados salvos: ${size:-?}"
+  else
+    echo -e "    ${GOLD}Sem dados salvos${NC}"
+  fi
+}
+
+emulator_reset() {
+  echo -e "${GOLD}Apagando todos os dados dos emuladores...${NC}"
+  rm -rf "$BACKEND_DIR/emulator-data"
+  mkdir -p "$BACKEND_DIR/emulator-data"
+  echo -e "  ${GREEN}Dados apagados. Próximo start será do zero.${NC}"
+}
+
+# ─── Orchestrator (local event processor) ─────────────────────────────────────
+
+is_orchestrator_running() {
+  [ -f /tmp/spartacus-orchestrator.pid ] && kill -0 "$(cat /tmp/spartacus-orchestrator.pid)" 2>/dev/null
+}
+
+orchestrator_start() {
+  if is_orchestrator_running; then
+    echo -e "  ${GREEN}●${NC} Orchestrator ja esta rodando"
+    return
+  fi
+  echo -e "${CYAN}Local Event Orchestrator...${NC}"
+  cd "$BACKEND_DIR"
+  OPENSSL_CONF="" uv run python scripts/local_orchestrator.py \
+    > /tmp/spartacus-orchestrator.log 2>&1 &
+  echo $! > /tmp/spartacus-orchestrator.pid
+  echo -e "  ${GREEN}●${NC} Orchestrator  (polling events collection)"
+  echo -e "    Logs: ./dev.sh orchestrator logs"
+}
+
+orchestrator_stop() {
+  if [ -f /tmp/spartacus-orchestrator.pid ]; then
+    kill "$(cat /tmp/spartacus-orchestrator.pid)" 2>/dev/null || true
+    rm -f /tmp/spartacus-orchestrator.pid
+  fi
+  echo -e "  ${RED}●${NC} Orchestrator parado"
+}
+
+orchestrator_status() {
+  if is_orchestrator_running; then
+    echo -e "  ${GREEN}●${NC} Orchestrator  (running)"
+  else
+    echo -e "  ${RED}●${NC} Orchestrator  (parado)"
+  fi
+}
+
+orchestrator_logs() {
+  if [ ! -f /tmp/spartacus-orchestrator.log ]; then
+    echo -e "${RED}Sem arquivo de log. Orchestrator foi iniciado?${NC}"
+    exit 1
+  fi
+  tail -f /tmp/spartacus-orchestrator.log
 }
 
 # ─── Backend ──────────────────────────────────────────────────────────────────
@@ -398,6 +478,73 @@ app_web() {
   echo -e "  https://spartacus-artes-marciais-app.web.app"
 }
 
+# ─── Webapp (Expo Web — app.spartacus.app.br local) ──────────────────────────
+
+is_webapp_running() {
+  [ -f /tmp/spartacus-webapp.pid ] && kill -0 "$(cat /tmp/spartacus-webapp.pid)" 2>/dev/null
+}
+
+webapp_start() {
+  if is_webapp_running; then
+    echo -e "  ${GREEN}●${NC} Webapp ja esta rodando — http://localhost:8081"
+    return
+  fi
+
+  echo -e "${CYAN}Webapp (Expo Web)...${NC}"
+  cd "$APP_DIR"
+
+  # Swap API URL to local backend and enable emulators for the dev session
+  local env_file="$APP_DIR/.env"
+  local current_url
+  current_url=$(grep "^EXPO_PUBLIC_API_URL=" "$env_file" | tail -1 | cut -d= -f2-)
+  if ! echo "$current_url" | grep -q "localhost:8000"; then
+    echo -e "  ${GOLD}Trocando EXPO_PUBLIC_API_URL para http://localhost:8000${NC}"
+    sed -i "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://localhost:8000|" "$env_file"
+  fi
+  # Enable Firebase Auth emulator
+  if ! grep -q "^EXPO_PUBLIC_USE_EMULATORS=true" "$env_file"; then
+    echo -e "  ${GOLD}Habilitando Firebase Auth Emulator (localhost:9099)${NC}"
+    sed -i "s|^#\s*EXPO_PUBLIC_USE_EMULATORS=.*|EXPO_PUBLIC_USE_EMULATORS=true|" "$env_file"
+    if ! grep -q "^EXPO_PUBLIC_USE_EMULATORS=true" "$env_file"; then
+      echo "EXPO_PUBLIC_USE_EMULATORS=true" >> "$env_file"
+    fi
+  fi
+
+  EXPO_PUBLIC_API_URL=http://localhost:8000 \
+  EXPO_PUBLIC_USE_EMULATORS=true \
+  npx expo start --web --port 8081 \
+    > /tmp/spartacus-webapp.log 2>&1 &
+  echo $! > /tmp/spartacus-webapp.pid
+  echo -e "  ${GREEN}●${NC} Webapp        http://localhost:8081"
+  echo -e "    API:  http://localhost:8000 (backend local)"
+  echo -e "    Prod: https://app.spartacus.app.br"
+  echo -e "    Logs: ./dev.sh webapp logs"
+}
+
+webapp_stop() {
+  if [ -f /tmp/spartacus-webapp.pid ]; then
+    kill "$(cat /tmp/spartacus-webapp.pid)" 2>/dev/null || true
+    rm -f /tmp/spartacus-webapp.pid
+  fi
+  echo -e "  ${RED}●${NC} Webapp parado"
+}
+
+webapp_status() {
+  if is_webapp_running; then
+    echo -e "  ${GREEN}●${NC} Webapp        http://localhost:8081"
+  else
+    echo -e "  ${RED}●${NC} Webapp        (parado)"
+  fi
+}
+
+webapp_logs() {
+  if [ ! -f /tmp/spartacus-webapp.log ]; then
+    echo -e "${RED}Sem arquivo de log. Webapp foi iniciado?${NC}"
+    exit 1
+  fi
+  tail -f /tmp/spartacus-webapp.log
+}
+
 # ─── Backoffice ──────────────────────────────────────────────────────────────
 
 is_backoffice_running() {
@@ -459,7 +606,11 @@ all_start() {
   backend_start
   sleep 2
   echo ""
+  orchestrator_start
+  echo ""
   app_start "$@"
+  echo ""
+  webapp_start
   echo ""
   backoffice_start
   echo ""
@@ -478,7 +629,9 @@ all_start() {
 all_stop() {
   echo -e "${GOLD}Parando todos os servicos...${NC}"
   backoffice_stop
+  webapp_stop
   app_stop
+  orchestrator_stop
   backend_stop
   emulator_stop
   echo -e "\n${GREEN}Tudo parado.${NC}"
@@ -489,7 +642,9 @@ all_status() {
   echo ""
   emulator_status
   backend_status
+  orchestrator_status
   app_status
+  webapp_status
   backoffice_status
   echo ""
 }
@@ -499,7 +654,7 @@ all_status() {
 usage() {
   echo "Uso: ./dev.sh [servico] <acao>"
   echo ""
-  echo "Servicos: emulator, backend, app, backoffice (ou nenhum para todos)"
+  echo "Servicos: emulator, backend, orchestrator, app, webapp, backoffice (ou nenhum para todos)"
   echo "Acoes:    start, stop, status, logs, build, deploy, devlog"
   echo ""
   echo "Exemplos:"
@@ -512,7 +667,10 @@ usage() {
   echo "  ./dev.sh app deploy           # build + instala no celular via USB"
   echo "  ./dev.sh app devlog           # logs JS do celular em tempo real"
   echo "  ./dev.sh app publish          # build AAB + publica na Play Store"
-  echo "  ./dev.sh app web             # build PWA + deploy Firebase Hosting"
+  echo "  ./dev.sh app web              # build PWA + deploy Firebase Hosting"
+  echo "  ./dev.sh webapp start         # sobe app web local (Expo Web, API local)"
+  echo "  ./dev.sh webapp stop          # para app web local"
+  echo "  ./dev.sh webapp logs          # logs do app web"
   echo "  ./dev.sh backoffice           # sobe backoffice dev server"
   echo "  ./dev.sh backoffice logs      # logs do backoffice"
   echo "  ./dev.sh stop                 # para tudo"
@@ -531,6 +689,16 @@ case "$SERVICE" in
       stop)   emulator_stop ;;
       status) emulator_status ;;
       logs)   echo -e "${GOLD}Emulators logs via docker:${NC}"; cd "$BACKEND_DIR" && docker compose logs -f ;;
+      reset)  emulator_reset ;;
+      *)      usage; exit 1 ;;
+    esac
+    ;;
+  orchestrator)
+    case "$ACTION" in
+      start)  orchestrator_start ;;
+      stop)   orchestrator_stop ;;
+      status) orchestrator_status ;;
+      logs)   orchestrator_logs ;;
       *)      usage; exit 1 ;;
     esac
     ;;
@@ -556,6 +724,15 @@ case "$SERVICE" in
       publish) app_publish ;;
       web)     app_web ;;
       *)       usage; exit 1 ;;
+    esac
+    ;;
+  webapp)
+    case "$ACTION" in
+      start)  webapp_start ;;
+      stop)   webapp_stop ;;
+      status) webapp_status ;;
+      logs)   webapp_logs ;;
+      *)      usage; exit 1 ;;
     esac
     ;;
   backoffice)
