@@ -44,6 +44,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INFRA_DIR="$ROOT_DIR/repos/infra"
 BACKEND_DIR="$ROOT_DIR/repos/backend"
 APP_DIR="$ROOT_DIR/repos/app"
 BACKOFFICE_DIR="$ROOT_DIR/repos/backoffice"
@@ -111,18 +112,18 @@ emulator_start() {
     return
   fi
   echo -e "${CYAN}Firebase Emulators...${NC}"
-  cd "$BACKEND_DIR"
+  cd "$INFRA_DIR"
 
   # Ensure emulator-data dir exists (volume mount target)
   mkdir -p emulator-data
 
   local has_data="no"
-  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ] || \
-     [ -d "$BACKEND_DIR/emulator-data/auth_export" ]; then
+  if [ -d "$INFRA_DIR/emulator-data/saved/firestore_export" ] || \
+     [ -d "$INFRA_DIR/emulator-data/saved/auth_export" ]; then
     has_data="yes"
   fi
 
-  docker compose up -d 2>&1 | tail -3
+  docker compose up -d emulators 2>&1 | tail -3
   echo -n "  Aguardando"
   local retries=30
   while ! is_emulator_running; do
@@ -136,7 +137,7 @@ emulator_start() {
   done
   echo -e " ${GREEN}OK${NC}"
   echo -e "  ${GREEN}●${NC} Emulators     http://localhost:4000"
-  echo -e "    Firestore :8080 | Auth :9099 | Storage :9199"
+  echo -e "    Firestore :8080 | Auth :9099 | Storage :9199 | Functions :5001"
   if [ "$has_data" = "yes" ]; then
     echo -e "    ${GREEN}Dados restaurados de emulator-data/${NC}"
   else
@@ -146,11 +147,12 @@ emulator_start() {
 }
 
 emulator_stop() {
-  cd "$BACKEND_DIR"
-  docker compose down 2>/dev/null
+  cd "$INFRA_DIR"
+  docker compose stop emulators 2>/dev/null
+  docker compose rm -f emulators 2>/dev/null
   echo -e "  ${RED}●${NC} Emulators parado"
-  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ]; then
-    echo -e "    ${GREEN}Dados exportados em emulator-data/${NC}"
+  if [ -d "$INFRA_DIR/emulator-data/saved/firestore_export" ]; then
+    echo -e "    ${GREEN}Dados exportados em emulator-data/saved/${NC}"
   fi
 }
 
@@ -160,9 +162,9 @@ emulator_status() {
   else
     echo -e "  ${RED}●${NC} Emulators     (parado)"
   fi
-  if [ -d "$BACKEND_DIR/emulator-data/firestore_export" ]; then
+  if [ -d "$INFRA_DIR/emulator-data/saved/firestore_export" ]; then
     local size
-    size=$(du -sh "$BACKEND_DIR/emulator-data" 2>/dev/null | cut -f1)
+    size=$(du -sh "$INFRA_DIR/emulator-data" 2>/dev/null | cut -f1)
     echo -e "    Dados salvos: ${size:-?}"
   else
     echo -e "    ${GOLD}Sem dados salvos${NC}"
@@ -171,8 +173,9 @@ emulator_status() {
 
 emulator_reset() {
   echo -e "${GOLD}Apagando todos os dados dos emuladores...${NC}"
-  rm -rf "$BACKEND_DIR/emulator-data"
-  mkdir -p "$BACKEND_DIR/emulator-data"
+  # saved/ is root-owned (created by container), use docker to remove
+  docker run --rm -v "$INFRA_DIR/emulator-data:/data" alpine rm -rf /data/saved
+  mkdir -p "$INFRA_DIR/emulator-data"
   echo -e "  ${GREEN}Dados apagados. Próximo start será do zero.${NC}"
 }
 
@@ -688,7 +691,7 @@ case "$SERVICE" in
       start)  emulator_start ;;
       stop)   emulator_stop ;;
       status) emulator_status ;;
-      logs)   echo -e "${GOLD}Emulators logs via docker:${NC}"; cd "$BACKEND_DIR" && docker compose logs -f ;;
+      logs)   echo -e "${GOLD}Emulators logs via docker:${NC}"; cd "$INFRA_DIR" && docker compose logs -f emulators ;;
       reset)  emulator_reset ;;
       *)      usage; exit 1 ;;
     esac
