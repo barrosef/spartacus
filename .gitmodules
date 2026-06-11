@@ -1,0 +1,24 @@
+[submodule "repos/app"]
+	path = repos/app
+	url = git@github.com:Digital-Business-One/spartacus-app.git
+	branch = dev
+[submodule "repos/backend"]
+	path = repos/backend
+	url = git@github.com:Digital-Business-One/spartacus-backend.git
+	branch = dev
+[submodule "repos/backoffice"]
+	path = repos/backoffice
+	url = git@github.com:Digital-Business-One/spartacus-backoffice.git
+	branch = dev
+[submodule "repos/infra"]
+	path = repos/infra
+	url = git@github.com:Digital-Business-One/spartacus-infra.git
+	branch = dev
+[submodule "repos/spartacus-prototipo"]
+	path = repos/spartacus-prototipo
+	url = git@github.com:Digital-Business-One/spartacus-prototipo.git
+	branch = prototype
+[submodule "repos/ui-components"]
+	path = repos/ui-components
+	url = git@github.com:Digital-Business-One/spartacus-ui-components.git
+	branch = dev

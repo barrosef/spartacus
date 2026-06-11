@@ -1,5 +1,5 @@
-# Sub-repositórios (cada um é um git repo independente)
-repos/
+# Sub-repositórios são submódulos git (ver .gitmodules)
+# Diretórios em repos/ que NÃO são submódulos permanecem ignorados manualmente, se houver.
 
 # Environment
 .env
