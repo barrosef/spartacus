@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Infográficos · App Spartacus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#14110A;          /* warm near-black */
+    --ink-2:#1E1A10;        /* raised charcoal  */
+    --surface:#241F14;      /* card surface     */
+    --gold:#C6A34E;         /* spartan bronze   */
+    --gold-hi:#E7CB85;      /* highlight        */
+    --gold-deep:#8C6B2F;    /* deep bronze      */
+    --paper:#F4EFE4;        /* off-white text   */
+    --muted:#A99F8C;        /* warm muted       */
+    --line:rgba(198,163,78,.28);
+    --line-soft:rgba(198,163,78,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#0c0a06;}
+  body{
+    font-family:"Outfit",system-ui,sans-serif;
+    display:flex;flex-direction:column;align-items:center;gap:56px;
+    padding:56px 24px 96px;color:var(--paper);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  .hint{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#6b6453;font-weight:600}
+
+  /* ---- Poster canvas: 1080 x 1350 (4:5), screenshot-ready ---- */
+  .poster{
+    position:relative;width:1080px;height:1350px;overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 50% -8%, rgba(198,163,78,.16), transparent 46%),
+      radial-gradient(90% 60% at 88% 108%, rgba(140,107,47,.18), transparent 55%),
+      linear-gradient(168deg,#1c1810 0%, #14110A 52%, #100D08 100%);
+    border:1px solid var(--line-soft);
+    border-radius:34px;
+    box-shadow:0 50px 120px -40px rgba(0,0,0,.85), inset 0 1px 0 rgba(231,203,133,.08);
+    isolation:isolate;
+  }
+  /* film grain */
+  .poster::after{
+    content:"";position:absolute;inset:0;z-index:6;pointer-events:none;mix-blend-mode:overlay;opacity:.5;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
+  }
+  /* hairline frame inset */
+  .frame{position:absolute;inset:30px;border:1px solid var(--line-soft);border-radius:22px;z-index:2;pointer-events:none}
+  .frame::before,.frame::after{content:"";position:absolute;width:18px;height:18px;border:2px solid var(--gold);opacity:.7}
+  .frame::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-top-left-radius:8px}
+  .frame::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-bottom-right-radius:8px}
+
+  /* monumental Spartan lambda watermark */
+  .lambda{
+    position:absolute;z-index:1;left:50%;top:54%;transform:translate(-50%,-50%);
+    font-family:"Cinzel",serif;font-weight:900;font-size:1180px;line-height:.7;
+    color:rgba(198,163,78,.05);user-select:none;letter-spacing:-.04em;
+    text-shadow:0 0 80px rgba(198,163,78,.06);
+  }
+
+  .content{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;padding:96px 86px 78px}
+
+  /* ---- emblem ---- */
+  .crest{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .medallion{width:128px;height:128px;filter:drop-shadow(0 8px 26px rgba(198,163,78,.28))}
+  .wordmark{font-family:"Cinzel",serif;font-weight:700;letter-spacing:.42em;font-size:21px;color:var(--gold-hi);padding-left:.42em}
+  .wordsub{font-size:11.5px;letter-spacing:.54em;color:var(--muted);text-transform:uppercase;padding-left:.54em}
+
+  /* ---- header ---- */
+  header{text-align:center;margin-top:40px}
+  .kicker{display:inline-flex;align-items:center;gap:14px;font-size:14px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;color:var(--gold)}
+  .kicker::before,.kicker::after{content:"";width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .kicker::after{background:linear-gradient(90deg,var(--gold),transparent)}
+  h1{font-family:"Cinzel",serif;font-weight:800;color:var(--paper);
+     font-size:78px;line-height:.98;letter-spacing:.02em;margin:22px 0 0}
+  h1 .em{color:var(--gold-hi)}
+  .lede{margin:26px auto 0;max-width:740px;font-size:25px;line-height:1.5;color:var(--muted);font-weight:300}
+  .lede strong{color:var(--paper);font-weight:600}
+
+  /* ---- cards ---- */
+  .cards{display:flex;flex-direction:column;gap:26px;margin-top:auto;padding-top:54px}
+  .card{position:relative;display:grid;grid-template-columns:96px 1fr;gap:30px;align-items:center;
+    background:linear-gradient(120deg, rgba(36,31,20,.92), rgba(26,22,14,.86));
+    border:1px solid var(--line);border-radius:20px;padding:30px 34px;
+    box-shadow:0 22px 50px -28px rgba(0,0,0,.8), inset 0 1px 0 rgba(231,203,133,.06);
+    overflow:hidden;
+  }
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:linear-gradient(180deg,var(--gold-hi),var(--gold-deep))}
+  .num{font-family:"Cinzel",serif;font-weight:800;font-size:30px;color:var(--ink);
+    width:64px;height:64px;border-radius:50%;display:grid;place-items:center;justify-self:center;
+    background:radial-gradient(circle at 32% 28%, var(--gold-hi), var(--gold) 58%, var(--gold-deep));
+    box-shadow:0 6px 16px -4px rgba(198,163,78,.5), inset 0 1px 2px rgba(255,255,255,.4)}
+  .ico{position:absolute;right:30px;top:26px;color:var(--gold);opacity:.9}
+  .card h3{font-family:"Outfit";font-weight:700;font-size:30px;line-height:1.1;color:var(--paper);
+    letter-spacing:-.01em;margin-bottom:9px;padding-right:60px}
+  .card p{font-size:21.5px;line-height:1.46;color:var(--muted);font-weight:300;padding-right:30px}
+  .card p b{color:var(--gold-hi);font-weight:600}
+
+  /* ---- footer ---- */
+  footer{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:42px}
+  .foot-line{height:1px;flex:1;max-width:90px;background:linear-gradient(90deg,transparent,var(--line))}
+  .foot-line.r{background:linear-gradient(90deg,var(--line),transparent)}
+  .foot-txt{text-align:center}
+  .foot-txt b{font-family:"Cinzel",serif;font-weight:600;letter-spacing:.24em;font-size:14px;color:var(--gold-hi);text-transform:uppercase}
+  .foot-txt span{display:block;font-size:13px;color:var(--muted);font-style:italic;margin-top:5px;letter-spacing:.01em}
+
+  /* ---- staggered reveal ---- */
+  .reveal{opacity:0;transform:translateY(20px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .d1{animation-delay:.05s}.d2{animation-delay:.18s}.d3{animation-delay:.30s}
+  .d4{animation-delay:.46s}.d5{animation-delay:.60s}.d6{animation-delay:.74s}.d7{animation-delay:.88s}
+  @media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="hint">Infográfico 1 / 2 — Nota de versão · 1080×1350</div>
+
+<!-- ============== POSTER 1 — NOTA DE VERSÃO ============== -->
+<section class="poster">
+  <div class="lambda">Λ</div>
+  <div class="frame"></div>
+  <div class="content">
+
+    <div class="crest reveal d1">
+      <svg class="medallion" viewBox="0 0 120 120" fill="none" aria-label="Emblema Spartacus">
+        <circle cx="60" cy="60" r="56" stroke="url(#g1)" stroke-width="2"/>
+        <circle cx="60" cy="60" r="47" stroke="rgba(198,163,78,.4)" stroke-width="1"/>
+        <!-- laurel left -->
+        <g stroke="#C6A34E" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".9">
+          <path d="M30 86 C20 70 20 52 31 38"/>
+          <path d="M31 78 C24 76 22 72 22 67"/><path d="M30 70 C23 68 21 64 21 59"/>
+          <path d="M30 62 C24 60 22 56 23 51"/><path d="M32 54 C26 52 25 48 26 43"/>
+          <path d="M90 86 C100 70 100 52 89 38"/>
+          <path d="M89 78 C96 76 98 72 98 67"/><path d="M90 70 C97 68 99 64 99 59"/>
+          <path d="M90 62 C96 60 98 56 97 51"/><path d="M88 54 C94 52 95 48 94 43"/>
+        </g>
+        <text x="60" y="74" text-anchor="middle" font-family="Cinzel" font-weight="900" font-size="52" fill="url(#g1)">S</text>
+        <circle cx="60" cy="22" r="2.4" fill="#E7CB85"/>
+        <defs><linearGradient id="g1" x1="20" y1="14" x2="100" y2="106">
+          <stop stop-color="#E7CB85"/><stop offset="1" stop-color="#8C6B2F"/></linearGradient></defs>
+      </svg>
+      <div class="wordmark">SPARTACUS</div>
+      <div class="wordsub">Artes Marciais</div>
+    </div>
+
+    <header>
+      <div class="kicker reveal d2">Atualização · Hoje</div>
+      <h1 class="reveal d2">NOVIDADES <span class="em">DO APP</span></h1>
+      <p class="lede reveal d3">Ouvimos vocês. Esta versão chegou pra deixar o app
+        <strong>mais simples e prático</strong> de usar.</p>
+    </header>
+
+    <div class="cards">
+      <!-- 1 -->
+      <article class="card reveal d4">
+        <div class="num">1</div>
+        <svg class="ico" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1V4a1 1 0 0 1 1-1Z"/>
+          <path d="M9 13.2c0-1 1.5-1.7 2.3-.6.8-1.1 2.3-.4 2.3.6 0 1.2-2.3 2.6-2.3 2.6S9 14.4 9 13.2Z" fill="currentColor" stroke="none"/>
+        </svg>
+        <div>
+          <h3>Ficha de saúde agora é opcional</h3>
+          <p>Ela foi para o <b>menu do seu perfil</b> e não bloqueia mais a timeline. Sem preenchimento, aparecem apenas lembretes amigáveis.</p>
+        </div>
+      </article>
+      <!-- 2 -->
+      <article class="card reveal d5">
+        <div class="num">2</div>
+        <svg class="ico" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3Z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <div>
+          <h3>Área da equipe dentro do app</h3>
+          <p>Professores, instrutores e assistentes validam <b>frequência, apoio, graduações e fichas</b> direto no app — sem abrir o backoffice.</p>
+        </div>
+      </article>
+      <!-- 3 -->
+      <article class="card reveal d6">
+        <div class="num">3</div>
+        <svg class="ico" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 5h16l-6.4 7.6V19l-3.2 1.6v-8L4 5Z"/>
+          <path d="M16.5 16.5l1.6 1.6 3-3.2"/>
+        </svg>
+        <div>
+          <h3>Filtros da timeline corrigidos</h3>
+          <p>Os filtros que davam erro foram <b>corrigidos e testados</b>. Agora dá pra filtrar a timeline sem travar.</p>
+        </div>
+      </article>
+    </div>
+
+    <footer class="reveal d7">
+      <div class="foot-line"></div>
+      <div class="foot-txt">
+        <b>Plataforma Digital Spartacus</b>
+        <span>Digitalizar o Spartacus sem burocratizar o Spartacus</span>
+      </div>
+      <div class="foot-line r"></div>
+    </footer>
+  </div>
+</section>
+
+<div class="hint">Infográfico 2 / 2 — Regras do app · 1080×1350</div>
+
+<!-- ============== POSTER 2 — REGRAS DO APP ============== -->
+<section class="poster">
+  <div class="lambda">Λ</div>
+  <div class="frame"></div>
+  <div class="content">
+
+    <div class="crest reveal d1">
+      <svg class="medallion" viewBox="0 0 120 120" fill="none" aria-label="Emblema Spartacus">
+        <circle cx="60" cy="60" r="56" stroke="url(#g2)" stroke-width="2"/>
+        <circle cx="60" cy="60" r="47" stroke="rgba(198,163,78,.4)" stroke-width="1"/>
+        <g stroke="#C6A34E" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".9">
+          <path d="M30 86 C20 70 20 52 31 38"/>
+          <path d="M31 78 C24 76 22 72 22 67"/><path d="M30 70 C23 68 21 64 21 59"/>
+          <path d="M30 62 C24 60 22 56 23 51"/><path d="M32 54 C26 52 25 48 26 43"/>
+          <path d="M90 86 C100 70 100 52 89 38"/>
+          <path d="M89 78 C96 76 98 72 98 67"/><path d="M90 70 C97 68 99 64 99 59"/>
+          <path d="M90 62 C96 60 98 56 97 51"/><path d="M88 54 C94 52 95 48 94 43"/>
+        </g>
+        <text x="60" y="74" text-anchor="middle" font-family="Cinzel" font-weight="900" font-size="52" fill="url(#g2)">S</text>
+        <circle cx="60" cy="22" r="2.4" fill="#E7CB85"/>
+        <defs><linearGradient id="g2" x1="20" y1="14" x2="100" y2="106">
+          <stop stop-color="#E7CB85"/><stop offset="1" stop-color="#8C6B2F"/></linearGradient></defs>
+      </svg>
+      <div class="wordmark">SPARTACUS</div>
+      <div class="wordsub">Artes Marciais</div>
+    </div>
+
+    <header>
+      <div class="kicker reveal d2">Guia Rápido</div>
+      <h1 class="reveal d2">COMO <span class="em">FUNCIONA</span></h1>
+      <p class="lede reveal d3">Regras importantes do app, explicadas de um jeito
+        <strong>simples e direto</strong>.</p>
+    </header>
+
+    <div class="cards">
+      <!-- 1 -->
+      <article class="card reveal d4">
+        <div class="num">1</div>
+        <svg class="ico" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="8" r="3.4"/>
+          <path d="M3.5 19a5.5 5.5 0 0 1 11 0"/>
+          <circle cx="18" cy="7.5" r="5"/>
+          <text x="18" y="9.6" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="5.4" fill="currentColor" stroke="none">15</text>
+        </svg>
+        <div>
+          <h3>Idade mínima: 15 anos</h3>
+          <p>Exigência das lojas (Google Play e App Store). Menores de 15 podem ter <b>conta e matrícula feitas pelos pais ou responsáveis</b>.</p>
+        </div>
+      </article>
+      <!-- 2 -->
+      <article class="card reveal d5">
+        <div class="num">2</div>
+        <svg class="ico" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="3"/><path d="M2.5 18a5.5 5.5 0 0 1 11 0"/>
+          <circle cx="17" cy="10" r="2.4"/><path d="M13.5 18.5a4 4 0 0 1 7.8 0"/>
+          <path d="M19.5 4.8a4 4 0 0 0-6.4 1"/><path d="M19.7 3v2h-2"/>
+        </svg>
+        <div>
+          <h3>Acesso dos responsáveis</h3>
+          <p>No mesmo celular: <b>toque na foto do perfil</b> e escolha o dependente. Você vê e faz tudo como se fosse ele navegando.</p>
+        </div>
+      </article>
+      <!-- 3 -->
+      <article class="card reveal d6">
+        <div class="num">3</div>
+        <svg class="ico" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2.5l2.3 1.7 2.8-.2.9 2.7 2.4 1.6-.9 2.7.9 2.7-2.4 1.6-.9 2.7-2.8-.2L12 21.5l-2.3-1.7-2.8.2-.9-2.7-2.4-1.6.9-2.7-.9-2.7 2.4-1.6.9-2.7 2.8.2L12 2.5Z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <div>
+          <h3>Tudo é validado pela equipe</h3>
+          <p>Matrículas, graduações, frequência, doações e fichas <b>só ficam ativas após a validação</b> da equipe. Antes disso, ficam “aguardando confirmação”.</p>
+        </div>
+      </article>
+    </div>
+
+    <footer class="reveal d7">
+      <div class="foot-line"></div>
+      <div class="foot-txt">
+        <b>Plataforma Digital Spartacus</b>
+        <span>Digitalizar o Spartacus sem burocratizar o Spartacus</span>
+      </div>
+      <div class="foot-line r"></div>
+    </footer>
+  </div>
+</section>
+
+</body>
+</html>
