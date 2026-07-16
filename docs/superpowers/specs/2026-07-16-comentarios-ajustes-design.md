@@ -1,7 +1,7 @@
 # Comentários na Timeline — Ajustes de UX (inline, edição, moderação unificada) — Design
 
 **Data:** 2026-07-16
-**Status:** Aprovado (brainstorming) — aguardando revisão do spec
+**Status:** Implementado (2026-07-16)
 **Base:** revisa decisões de [2026-07-13-timeline-comentarios-design.md](./2026-07-13-timeline-comentarios-design.md) e [2026-07-14-moderacao-usuarios-design.md](./2026-07-14-moderacao-usuarios-design.md) após uso real.
 
 ## Contexto
