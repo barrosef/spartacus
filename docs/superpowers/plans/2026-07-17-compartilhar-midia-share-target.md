@@ -1,5 +1,7 @@
 # Compartilhar Mídia + Share-Target — Plano de Implementação
 
+> **STATUS: IMPLEMENTADO E ENTREGUE (2026-07-17).** Tasks 1–10 codificadas, mergeadas (`dev`→`main`, commit `21bea93`) e buildadas pelo CI: **1.0.7 / versionCode 47** — `eas build` production `finished`, `eas submit` (Play Store faixa interna) OK e OTA `v1.0.7 (build 47)` publicado no canal `production`. **Pendência única:** o checklist manual em device da Task 11, Step 2 (verificação humana das partes nativas) e a marcação final da spec como `Implementado` (Step 3), que dependem desse teste em aparelho real.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Dar ao app duas features Android complementares — compartilhar imagem(ns) de cards públicos para apps externos (saída) e receber imagens compartilhadas de outros apps abrindo o PostWizard (entrada) — sem nenhuma mudança de backend.
@@ -34,7 +36,7 @@ Instala as libs nativas e registra o `expo-share-intent` como config plugin (só
 **Interfaces:**
 - Produces: módulos `react-native-share`, `expo-file-system`, `expo-share-intent` resolvíveis; config plugin `expo-share-intent` ativo com `androidIntentFilters: ["image/*"]`, `disableIOS: true`.
 
-- [ ] **Step 1: Instalar as dependências**
+- [x] **Step 1: Instalar as dependências**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -44,7 +46,7 @@ npm install react-native-share@^12.3.1 expo-share-intent@^3.2.3
 
 Esperado: `package.json` passa a listar as três libs em `dependencies`; `expo-file-system` fica na versão compatível com SDK 52 (~18.0.x).
 
-- [ ] **Step 2: Registrar o config plugin no `app.json`**
+- [x] **Step 2: Registrar o config plugin no `app.json`**
 
 Em `repos/app/app.json`, dentro do array `expo.plugins`, adicione a entrada abaixo (logo após `"expo-font"`, mantendo as demais):
 
@@ -59,7 +61,7 @@ Em `repos/app/app.json`, dentro do array `expo.plugins`, adicione a entrada abai
 ]
 ```
 
-- [ ] **Step 3: Validar tipos e lint**
+- [x] **Step 3: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -67,7 +69,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS, sem erros. (As libs trazem seus próprios tipos; nenhum import novo ainda foi adicionado ao código.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -91,7 +93,7 @@ Dois utilitários puros, base de toda a saída: o gate de plataforma e a legenda
   - `canShareExternally: boolean` — `true` só no Android.
   - `buildCaption(entry: Pick<TimelineEntry, "title">): string` — legenda de crédito.
 
-- [ ] **Step 1: Criar `platform.ts`**
+- [x] **Step 1: Criar `platform.ts`**
 
 ```ts
 import { Platform } from "react-native";
@@ -103,7 +105,7 @@ import { Platform } from "react-native";
 export const canShareExternally = Platform.OS === "android";
 ```
 
-- [ ] **Step 2: Criar `buildCaption.ts`**
+- [x] **Step 2: Criar `buildCaption.ts`**
 
 ```ts
 import type { TimelineEntry } from "../../components/timeline/types";
@@ -120,7 +122,7 @@ export function buildCaption(entry: Pick<TimelineEntry, "title">): string {
 }
 ```
 
-- [ ] **Step 3: Validar tipos e lint**
+- [x] **Step 3: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -128,7 +130,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -149,7 +151,7 @@ Baixa cada URL remota para o cache, dispara a bandeja do Android com imagens + l
 - Consumes: `expo-file-system` (`downloadAsync`, `deleteAsync`, `cacheDirectory`); `react-native-share` (`Share.open`).
 - Produces: `shareMedia(input: { urls: string[]; caption: string }): Promise<void>` — resolve em sucesso ou cancelamento; rejeita em falha de download ou quando não há app receptor.
 
-- [ ] **Step 1: Criar `shareMedia.ts`**
+- [x] **Step 1: Criar `shareMedia.ts`**
 
 ```ts
 import * as FileSystem from "expo-file-system";
@@ -193,7 +195,7 @@ export async function shareMedia({ urls, caption }: ShareMediaInput): Promise<vo
 }
 ```
 
-- [ ] **Step 2: Validar tipos e lint**
+- [x] **Step 2: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -201,7 +203,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS. (Nota: `react-native-share` só acessa o módulo nativo ao chamar `Share.open`; o import de topo é seguro no bundle web, e `shareMedia` nunca é invocada em web por causa do gate.)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -222,7 +224,7 @@ Bottom sheet na identidade do projeto (RN `Modal` transparente, como o `DialogPr
 - Consumes: tokens (`colors`, `spacing`, `radius`, `typography`) de `src/theme/tokens`; `Button` de `src/components/ui/Button`; `TimelineAttachment` de `./types`.
 - Produces: `<ShareSheet images={TimelineAttachment[]} visible={boolean} onClose={() => void} onConfirm={(urls: string[]) => void} />` — chama `onConfirm` com as URLs marcadas (na ordem original) e fecha.
 
-- [ ] **Step 1: Criar `ShareSheet.tsx`**
+- [x] **Step 1: Criar `ShareSheet.tsx`**
 
 ```tsx
 import React, { useEffect, useState } from "react";
@@ -408,7 +410,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-- [ ] **Step 2: Validar tipos e lint**
+- [x] **Step 2: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -416,7 +418,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -437,7 +439,7 @@ Botão de compartilhar no rodapé, junto de curtir/comentar, só em card públic
 - Consumes: `canShareExternally` (`src/lib/share/platform`); `buildCaption` (`src/lib/share/buildCaption`); `shareMedia` (`src/lib/share/shareMedia`); `ShareSheet` (`./ShareSheet`); `useDialog` (`src/components/ui/DialogProvider`).
 - Produces: (nenhuma API nova consumida por outras tasks — muda apenas a UI interna do `PostCard`).
 
-- [ ] **Step 1: Adicionar imports no topo de `PostCard.tsx`**
+- [x] **Step 1: Adicionar imports no topo de `PostCard.tsx`**
 
 Após a linha `import type { TimelineEntry } from "./types";` (linha 9), acrescente:
 
@@ -452,7 +454,7 @@ import { useDialog } from "../ui/DialogProvider";
 
 (O `React` já vem de `import React from "react"` na linha 1; adicionar `useMemo`/`useState` do mesmo pacote é seguro.)
 
-- [ ] **Step 2: Calcular imagens e handlers dentro do componente**
+- [x] **Step 2: Calcular imagens e handlers dentro do componente**
 
 Logo após a linha `const isEvent = entry.type === "event" || entry.type === "championship";` (linha 48), adicione:
 
@@ -491,7 +493,7 @@ Logo após a linha `const isEvent = entry.type === "event" || entry.type === "ch
   };
 ```
 
-- [ ] **Step 3: Renderizar o botão no rodapé**
+- [x] **Step 3: Renderizar o botão no rodapé**
 
 Dentro de `<View style={styles.footerLeft}>`, após o bloco do contador de comentários (logo depois do fechamento do `{commentsCount > 0 ? (...) : null}`, por volta da linha 169), adicione:
 
@@ -507,7 +509,7 @@ Dentro de `<View style={styles.footerLeft}>`, após o bloco do contador de comen
           ) : null}
 ```
 
-- [ ] **Step 4: Renderizar o `ShareSheet`**
+- [x] **Step 4: Renderizar o `ShareSheet`**
 
 Logo antes do `{/* Comentários inline ... */}` / `{commentsSection}` (por volta da linha 186), adicione:
 
@@ -525,7 +527,7 @@ Logo antes do `{/* Comentários inline ... */}` / `{commentsSection}` (por volta
       ) : null}
 ```
 
-- [ ] **Step 5: Validar tipos e lint**
+- [x] **Step 5: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -533,7 +535,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -561,7 +563,7 @@ git commit -m "feat(share): botão de compartilhar no rodapé do card (1 foto di
   - `open(images: TimelineAttachment[], index: number, share?: ShareContext): void` — assinatura estendida (3º arg opcional; chamadas atuais sem ele seguem idênticas).
   - `AttachmentList` e `MediaGallery` ganham prop opcional `shareContext?: ShareContext`.
 
-- [ ] **Step 1: Estender `MediaViewerContext.tsx`**
+- [x] **Step 1: Estender `MediaViewerContext.tsx`**
 
 Substitua o arquivo inteiro por:
 
@@ -645,7 +647,7 @@ export function MediaViewerProvider({
 }
 ```
 
-- [ ] **Step 2: Adicionar o ícone de share no `MediaViewer.tsx`**
+- [x] **Step 2: Adicionar o ícone de share no `MediaViewer.tsx`**
 
 No topo, ajuste os imports:
 
@@ -737,7 +739,7 @@ Acrescente ao `StyleSheet.create({...})` (junto dos demais estilos) a chave:
   },
 ```
 
-- [ ] **Step 3: Repassar `shareContext` em `MediaGallery.tsx`**
+- [x] **Step 3: Repassar `shareContext` em `MediaGallery.tsx`**
 
 Ajuste os props e a chamada `open`. Substitua a interface e o corpo do componente (linhas 18-36) por:
 
@@ -768,7 +770,7 @@ export function MediaGallery({ images, shareContext }: MediaGalleryProps) {
 
 (O `import type { TimelineAttachment }` já existe; adicione o import de `ShareContext` junto aos imports do topo se preferir agrupá-los.)
 
-- [ ] **Step 4: Repassar `shareContext` em `AttachmentList.tsx`**
+- [x] **Step 4: Repassar `shareContext` em `AttachmentList.tsx`**
 
 Ajuste os props (linhas 15-17) e a renderização da galeria (linha 32):
 
@@ -793,7 +795,7 @@ export function AttachmentList({ attachments, shareContext }: AttachmentListProp
       ) : null}
 ```
 
-- [ ] **Step 5: Passar `shareContext` a partir do `PostCard.tsx`**
+- [x] **Step 5: Passar `shareContext` a partir do `PostCard.tsx`**
 
 Onde o `PostCard` renderiza `<AttachmentList attachments={entry.attachments} />` (linha ~101), passe o contexto (reusa `canShare`/`buildCaption` já disponíveis desde a Task 5):
 
@@ -806,7 +808,7 @@ Onde o `PostCard` renderiza `<AttachmentList attachments={entry.attachments} />`
       ) : null}
 ```
 
-- [ ] **Step 6: Validar tipos e lint**
+- [x] **Step 6: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -814,7 +816,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -838,7 +840,7 @@ Extrai a decisão de roteamento da mídia recebida para uma função pura e test
   - `ShareRoutingResult = { action: "open" | "blocked-not-social" | "blocked-busy" | "truncated"; media: IncomingMedia[] }`
   - `decideShareRouting(input: ShareRoutingInput): ShareRoutingResult`
 
-- [ ] **Step 1: Criar `decideShareRouting.ts`**
+- [x] **Step 1: Criar `decideShareRouting.ts`**
 
 ```ts
 export interface IncomingMedia {
@@ -892,7 +894,7 @@ export function decideShareRouting({
 }
 ```
 
-- [ ] **Step 2: Validar tipos e lint**
+- [x] **Step 2: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -900,7 +902,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -925,7 +927,7 @@ Introduz o estado **compartilhado** do share-intent (um único `ShareIntentProvi
   - `markSharedWhileLoggedOut(): void` e `consumeSharedWhileLoggedOut(): boolean` (`loggedOutShareFlag.ts`).
   - `useIncomingShare(profileReady: boolean): { pendingMedia: IncomingMedia[] | null; clear: () => void }`.
 
-- [ ] **Step 1: Envolver a árvore no `ShareIntentProvider` (`App.tsx`)**
+- [x] **Step 1: Envolver a árvore no `ShareIntentProvider` (`App.tsx`)**
 
 No topo de `src/App.tsx`, junto aos imports:
 
@@ -949,7 +951,7 @@ Substitua o bloco de providers (linhas 62-70) por (adicionando o `ShareIntentPro
     </SafeAreaProvider>
 ```
 
-- [ ] **Step 2: Criar o sinal one-shot `loggedOutShareFlag.ts`**
+- [x] **Step 2: Criar o sinal one-shot `loggedOutShareFlag.ts`**
 
 ```ts
 /**
@@ -972,7 +974,7 @@ export function consumeSharedWhileLoggedOut(): boolean {
 }
 ```
 
-- [ ] **Step 3: Criar `useIncomingShare.ts`**
+- [x] **Step 3: Criar `useIncomingShare.ts`**
 
 ```ts
 import { useCallback, useMemo } from "react";
@@ -1023,7 +1025,7 @@ export function useIncomingShare(
 }
 ```
 
-- [ ] **Step 4: Validar tipos e lint**
+- [x] **Step 4: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -1031,7 +1033,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS. (Se `shareIntent.files` não expuser exatamente `path`/`mimeType`, ajuste `ShareIntentFile` conforme os tipos de `expo-share-intent@3.2.x` — verifique com `npm run typecheck`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -1052,7 +1054,7 @@ Prop opcional novo: com ele, o wizard abre no passo `media` e roda o `uploadFile
 - Consumes: `IncomingMedia` (`src/lib/share/decideShareRouting`); helpers internos existentes `uploadFile`, `setStep`, `setAttachments`.
 - Produces: `PostWizardScreenProps` ganha `initialMedia?: IncomingMedia[]`.
 
-- [ ] **Step 1: Importar o tipo e adicionar o prop**
+- [x] **Step 1: Importar o tipo e adicionar o prop**
 
 No topo do arquivo, junto aos imports:
 
@@ -1076,7 +1078,7 @@ Ajuste a assinatura da função (linha 74):
 export function PostWizardScreen({ onClose, initialMedia }: PostWizardScreenProps) {
 ```
 
-- [ ] **Step 2: Fazer upload da mídia recebida ao montar**
+- [x] **Step 2: Fazer upload da mídia recebida ao montar**
 
 Logo após a definição de `uploadFile` (que termina na linha ~167, `}, [dialog]);`), adicione o efeito:
 
@@ -1107,7 +1109,7 @@ Logo após a definição de `uploadFile` (que termina na linha ~167, `}, [dialog
 
 (`useRef` já é importado na linha 1: `import React, { useState, useCallback, useRef } from "react";`.)
 
-- [ ] **Step 3: Validar tipos e lint**
+- [x] **Step 3: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -1115,7 +1117,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -1137,7 +1139,7 @@ Fecha a integração da entrada. O `RootNavigator` descarta a mídia recebida **
 - Consumes: `useShareIntentContext` (`expo-share-intent`); `markSharedWhileLoggedOut`, `consumeSharedWhileLoggedOut` (Task 8); `useIncomingShare` (Task 8); `decideShareRouting`, `IncomingMedia` (Task 7); `useDialog` (`src/components/ui/DialogProvider`); `PostWizardScreen.initialMedia` (Task 9).
 - Produces: (nenhuma — fecha a integração da entrada).
 
-- [ ] **Step 1: Descartar mídia recebida enquanto deslogado (`RootNavigator.tsx`)**
+- [x] **Step 1: Descartar mídia recebida enquanto deslogado (`RootNavigator.tsx`)**
 
 No topo de `RootNavigator.tsx`, junto aos imports:
 
@@ -1168,7 +1170,7 @@ Dentro de `RootNavigator`, junto aos demais hooks (antes do primeiro `return`/ea
 
 (A constante `authScreenVisible` reusa exatamente a mesma condição de `showAuth` já calculada na linha ~137; deixe a linha `const showAuth = ...` existente como está.)
 
-- [ ] **Step 2: Adicionar imports no `MainNavigator.tsx`**
+- [x] **Step 2: Adicionar imports no `MainNavigator.tsx`**
 
 No topo de `MainNavigator.tsx`, junto aos demais imports:
 
@@ -1179,7 +1181,7 @@ import { useDialog } from "../components/ui/DialogProvider";
 import { consumeSharedWhileLoggedOut } from "../lib/share/loggedOutShareFlag";
 ```
 
-- [ ] **Step 3: Estado da mídia pendente e diálogo**
+- [x] **Step 3: Estado da mídia pendente e diálogo**
 
 Dentro de `MainContent`, junto aos outros `useState` (após a linha 87, `const [dependents, setDependents] = useState<DependentData[]>([]);`):
 
@@ -1188,7 +1190,7 @@ Dentro de `MainContent`, junto aos outros `useState` (após a linha 87, `const [
   const dialog = useDialog();
 ```
 
-- [ ] **Step 4: Detectar "tela ocupada" e consumir o intent**
+- [x] **Step 4: Detectar "tela ocupada" e consumir o intent**
 
 Após a linha `const hasSocialRole = profile?.roles.includes("social") ?? false;` (linha 92), adicione o cálculo de ocupação (todas as telas sobrepostas + o próprio wizard/mídia já pendente):
 
@@ -1245,7 +1247,7 @@ Depois dos efeitos de `fetchProfile`/`fetchDependents` (após a linha 120), adic
   }, [pendingMedia, hasSocialRole, screenBusy, clearShareIntent, dialog]);
 ```
 
-- [ ] **Step 5: Avisar uma vez quando houve descarte no login**
+- [x] **Step 5: Avisar uma vez quando houve descarte no login**
 
 Ainda em `MainContent`, adicione um efeito de montagem que consome o sinal one-shot do `RootNavigator` (mídia descartada enquanto o usuário estava deslogado):
 
@@ -1263,7 +1265,7 @@ Ainda em `MainContent`, adicione um efeito de montagem que consome o sinal one-s
   }, [dialog]);
 ```
 
-- [ ] **Step 6: Passar `initialMedia` ao wizard e limpar no fechamento**
+- [x] **Step 6: Passar `initialMedia` ao wizard e limpar no fechamento**
 
 Substitua o bloco `if (showPostWizard) { ... }` (linhas 177-186) por:
 
@@ -1282,7 +1284,7 @@ Substitua o bloco `if (showPostWizard) { ... }` (linhas 177-186) por:
   }
 ```
 
-- [ ] **Step 7: Validar tipos e lint**
+- [x] **Step 7: Validar tipos e lint**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
@@ -1290,7 +1292,7 @@ cd /opt/wks/dbo/spartacus/repos/app && npm run typecheck && npm run lint
 
 Esperado: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd /opt/wks/dbo/spartacus/repos/app
@@ -1306,14 +1308,17 @@ As partes nativas (intent-filter, bandeja do Android, `react-native-share`, `exp
 
 **Files:** (nenhum — build e verificação)
 
-- [ ] **Step 1: Gerar um build de desenvolvimento/preview**
+- [x] **Step 1: Gerar um build**
+
+> Feito via CI no push do merge `dev`→`main` (commit `21bea93`). O CI rodou `eas build --profile production` → build **1.0.7 / versionCode 47** (`finished` no EAS, 17/07). Distribuído pela faixa interna da Play Store (via `eas submit`), não por APK preview sideloadable. Instale a build 47 pela faixa interna para rodar o checklist abaixo.
 
 ```bash
+# alternativa para APK sideloadable direto (se preferir a device sem Play Store):
 cd /opt/wks/dbo/spartacus/repos/app
 eas build --profile preview --platform android
 ```
 
-Esperado: build conclui; o config plugin do `expo-share-intent` injeta os intent-filters `SEND`/`SEND_MULTIPLE` para `image/*`. Instale o APK num device Android real.
+Esperado: o config plugin do `expo-share-intent` injeta os intent-filters `SEND`/`SEND_MULTIPLE` para `image/*`.
 
 - [ ] **Step 2: Checklist manual (device Android)**
 
