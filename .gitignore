@@ -32,6 +32,13 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/.playwright-mcp/
+
+# Artefatos de comunicação/operação gerados na raiz (não versionados)
+/poster-*.png
+/mensagem-*.txt
+/comandos-*.txt
+/sendgrid-*.txt
 
 # Firebase CLI cache
 .firebase/
